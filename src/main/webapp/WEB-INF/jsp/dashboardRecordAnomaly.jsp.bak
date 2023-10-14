@@ -1,0 +1,776 @@
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@page import="org.springframework.jdbc.support.rowset.SqlRowSet"%>
+<%@page
+	import="org.springframework.jdbc.support.rowset.SqlRowSetMetaData"%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+	<jsp:include page="dashboardTableCommon.jsp" />
+
+
+	<div class="row">
+								<div class="col-md-12">
+									<div class="tabbable tabbable-custom boxless tabbable-reversed">
+										<ul class="nav nav-tabs"
+											style="border-bottom: 1px solid #ddd;">
+
+											<li  style="width: 9.63%"><a
+												href="dashboard_table?idApp=${idApp}"
+												style="padding: 2px 2px;"> <strong>Count
+														Reasonability</strong>
+											</a></li>
+											<li style="width: 8.63%"><a
+												href="validity?idApp=${idApp}"
+												style="padding: 2px 2px;"> <strong>Validity</strong>
+											</a></li>
+											<li style="width: 9.63%"><a href="dupstats?idApp=${idApp}"
+												style="padding: 2px 2px;"> <strong>Uniqueness</strong>
+											</a></li>
+											<li style="width: 10.5%"><a
+												href="nullstats?idApp=${idApp}" style="padding: 2px 2px;">
+													<strong>Completeness</strong>
+											</a></li>
+											<li style="width: 10.5%"><a
+												href="badData?idApp=${idApp}"
+												style="padding: 2px 2px;"><strong>Conformity</strong>
+											</a></li>
+											<li style="width: 8.63%"><a
+												href="stringstats?idApp=${idApp}" style="padding: 2px 2px;">
+													<strong>Drift & Orphan</strong>
+											</a></li>
+											<li style="width: 9.63%"><a
+												href="numericstats?idApp=${idApp}" style="padding: 2px 2px;">
+													<strong>Numeric Test</strong>
+											</a></li>
+											<li class="active" style="width: 9.63%"><a
+												href="recordAnomaly?idApp=${idApp}"
+												style="padding: 2px 2px;"> <strong>Record
+														Anomaly</strong></a></li>
+											<li style="width: 9.63%"><a
+												href="timelinessCheck?idApp=${idApp}"
+												style="padding: 2px 2px;"><strong>Sequence</strong>
+											</a></li>
+											<li style="width: 9.63%"><a
+												href="processingData?idApp=${idApp}"
+												style="padding: 2px 2px;"><strong>Processing Data</strong>
+											</a></li>
+											
+											
+										</ul>
+									</div>
+								</div>
+							</div>
+	<div class="portlet-title">
+		<div class="caption font-red-sunglo">
+			<span class="caption-subject bold ">Record Anomaly <a
+										href="downloadCsvS3?tableName=${RecordAnomaly_TableName}&idApp=${idApp}&tableNickName=RecordAnomalyData"
+										class="CSVStatus" id="">(Download CSV)</a></span>
+		</div>
+	</div>
+	<hr />
+	<div class="progress percentagebar hidden" id="rcdivbar">
+		<div class="progress">
+			<div class="progress-bar progressbar" role="progressbar"
+				style="width: 5%;" aria-valuenow="100" aria-valuemin="0"
+				aria-valuemax="100">5%</div>
+		</div>
+	</div>
+	<input type="hidden" id="tableName" value="${RecordAnomaly_TableName}">
+	
+	<div class="portlet-body">
+		<table id="RecordAnomalyTable"
+			class="table table-striped table-bordered table-advance table-hover"
+			style="width: 100%;">
+			<thead>
+				<tr>
+					<%-- <%
+						try {
+							SqlRowSet sqlRowSet1 = (SqlRowSet) request.getAttribute("headerRecordAnomaly");
+							SqlRowSetMetaData metaData = sqlRowSet1.getMetaData();
+							for (int i = 1; i <= metaData.getColumnCount(); i++) {
+								out.println("<th>" + metaData.getColumnName(i) + "</th>");
+							}
+						} catch (NullPointerException e) {
+
+						}
+					%>  --%>
+						<%-- <% if (request.getAttribute("headerRecordAnomaly") == "Y") { %>
+					<th>${headerRecordAnomaly}</th>
+					<th>${headerRecordAnomaly}</th>
+					<%
+						} else {
+                        %>
+                        <th>A</th>
+					<th>B</th>
+					<%} %> --%>
+					<c:if test="${headerRecordAnomaly eq 'Y'}">
+					<th>Date</th>
+					<th>Run</th>
+					<th>ColName</th>
+					<th>ColVal</th>
+					<th>Mean</th>
+					<th>StdDev</th>
+					<th>MicrosegmentVal</th>
+					<th>Microsegment</th>
+					
+					<th>Status</th>
+					<th>DQI</th>
+					</c:if>
+					<c:if test="${headerRecordAnomaly eq 'N'}">
+					<th>Date</th>
+					<th>Run</th>
+					<th>ColName</th>
+					<th>ColVal</th>
+					<th>Mean</th>
+					<th>StdDev</th>
+					<th>Status</th>
+					<th>Deviation</th>
+					<th>Status</th>		
+					
+					</c:if>
+				</tr>
+			</thead>
+			<%-- <tbody>
+												<%
+													DecimalFormat numberFormat = new DecimalFormat("#.00");
+															while (rs2.next()) {
+																out.println("<tr>");
+																for (int i = 1; i <= metadata2.getColumnCount(); i++) {
+																	if (metadata2.getColumnTypeName(i).equalsIgnoreCase("double")
+																			|| metadata2.getColumnTypeName(i).equalsIgnoreCase("decimal")
+																			|| metadata2.getColumnTypeName(i).equalsIgnoreCase("float")) {
+																		//System.out.println("rs.getString(i):" + rs2.getString(i));
+																		out.println("<td>" + numberFormat.format(rs2.getDouble(i)) + "</td>");
+																		
+																	} else {
+																		if (rs2.getString(i) != null) {
+																			if (rs2.getString(i).equalsIgnoreCase("passed")) {
+																				out.println("<td><span class='label label-success label-sm'>"
+																						+ rs2.getString(i) + "</span></td>");
+																			} else if (rs2.getString(i).equalsIgnoreCase("failed")) {
+																				out.println("<td><span class='label label-danger label-sm'>"
+																						+ rs2.getString(i) + "</span></td>");
+																			} else {
+																				out.println("<td>" + rs2.getString(i) + "</td>");
+																			}
+																		} else {
+																			out.println("<td>" + rs2.getString(i) + "</td>");
+																		}
+																		
+																	}
+																}
+																out.println("</tr>");
+															}
+														}
+											}catch(Exception e){
+												%><p>No data available in table</p>
+												<%
+											}
+												%>
+									</tbody> --%>
+		</table>
+	</div>
+	<div class="portlet-title">
+		<div class="caption font-red-sunglo">
+			<span class="caption-subject bold ">History Record Anomaly <a
+										href="downloadCsvS3?tableName=${HistoryAnomaly_TableName}&idApp=${idApp}&tableNickName=HistoryAnomalyData"
+										class="CSVStatus" id="">(Download CSV)</a>
+			</span>
+		</div>
+	</div>
+	<hr />
+	<div class="progress percentagebar hidden" id="rcdivbar">
+		<div class="progress">
+			<div class="progress-bar progressbar" role="progressbar"
+				style="width: 5%;" aria-valuenow="100" aria-valuemin="0"
+				aria-valuemax="100">5%</div>
+		</div>
+	</div>
+	<input type="hidden" id="HistorytableName"
+		value="${HistoryAnomaly_TableName}">
+	<div class="portlet-body">
+		<table id="HistoryAnomalyTable"
+			class="table table-striped table-bordered table-advance table-hover"
+			style="width: 100%;">
+			<thead>
+				<tr>
+					<%
+												try {
+													if (request.getAttribute("data_Quality__history_anomalyTrue") != null) {
+														SqlRowSet rs2 = (SqlRowSet) request.getAttribute("data_Quality__history_anomaly");
+														SqlRowSetMetaData metadata2 = rs2.getMetaData();
+														for (int i = 1; i <= metadata2.getColumnCount(); i++) {
+															out.println("<th>" + metadata2.getColumnName(i) + "</th>");
+														}
+													} else {
+											%>
+
+					<td>Date</td>
+					<td>Run</td>
+					<td>ColName</td>
+					<td>ColVal</td>
+					<td>mean</td>
+					<td>stddev</td>
+					<td>Deviation</td>
+					<td>status</td>
+					<%
+												}
+												} catch (Exception e) {
+											%><p>No data available in table</p>
+					<%
+												}
+											%>
+
+
+
+				</tr>
+			</thead>
+			<%--			<tbody>
+												<%
+													DecimalFormat numberFormat = new DecimalFormat("#.00");
+															while (rs2.next()) {
+																out.println("<tr>");
+																for (int i = 1; i <= metadata2.getColumnCount(); i++) {
+																	if (metadata2.getColumnTypeName(i).equalsIgnoreCase("double")
+																			|| metadata2.getColumnTypeName(i).equalsIgnoreCase("decimal")
+																			|| metadata2.getColumnTypeName(i).equalsIgnoreCase("float")) {
+																		//System.out.println("rs.getString(i):" + rs2.getString(i));
+																		out.println("<td>" + numberFormat.format(rs2.getDouble(i)) + "</td>");
+																		
+																	} else {
+																		if (rs2.getString(i) != null) {
+																			if (rs2.getString(i).equalsIgnoreCase("passed")) {
+																				out.println("<td><span class='label label-success label-sm'>"
+																						+ rs2.getString(i) + "</span></td>");
+																			} else if (rs2.getString(i).equalsIgnoreCase("failed")) {
+																				out.println("<td><span class='label label-danger label-sm'>"
+																						+ rs2.getString(i) + "</span></td>");
+																			} else {
+																				out.println("<td>" + rs2.getString(i) + "</td>");
+																			}
+																		} else {
+																			out.println("<td>" + rs2.getString(i) + "</td>");
+																		}
+																		
+																	}
+																}
+																out.println("</tr>");
+															}
+														}
+											}catch(Exception e){
+												%><p>No data available in table</p>
+												<%
+											}
+												%>
+									</tbody>
+								</table>
+							</div> --%>
+
+		</table>
+	</div>
+
+	</div>
+	</div>
+	<!-- END EXAMPLE TABLE PORTLET-->
+	</div>
+	</div>
+	<!-- close if -->
+	<!-- close if -->
+	</div>
+	</div>
+	<div class="cd-popup2" id="popSample">
+		<div class="cd-popup-container1" id="outerContainer1">
+			<div id="loading-data-progress" class="ajax-loader hidden">
+				<h4>
+					<b>Summary DQI Data Loading in progress..</b>
+				</h4>
+				<img
+					src="${pageContext.request.contextPath}/assets/global/img/loading-circle.gif"
+					class="img-responsive" />
+			</div>
+			<br /> <br /> <br /> <br />
+			<div id="chartDiv"
+				style="height: 300px; width: 100%; margin: 0 auto;"
+				class="dashboard-summary-chart"></div>
+			<button type="submit" id="dqiDataCloseBtn" class="btn blue">Close</button>
+		</div>
+	</div>
+	<jsp:include page="footer.jsp" />
+</body>
+
+
+<!-- 
+<script>
+jQuery(document).ready(function() {
+	var table;
+	console.log("hello");
+	var tableName=$( "#tableName").val();
+	
+	var idApp=$( "#idApp" ).val();
+	//alert(tableName + " " + idApp);
+	//alert(tableName);
+	if(tableName==$( "#tableName").val()){
+	table = $('#RecordAnomalyTable').dataTable({
+		  	"bPaginate": true,
+		  	"order": [ 0, 'asc' ],
+		  	"bInfo": true,
+		  	"iDisplayStart":0,
+		  	"bProcessing" : true,
+		 	"bServerSide" : true,
+		 	"dataSrc": "",
+		 	'sScrollX' : true,
+		 	"sAjaxSource" : path+"/recordAnomalyTable?tableName="+tableName+"&idApp="+idApp,
+		 	"dom": 'C<"clear">lfrtip',
+			colVis: {
+				"align": "right",
+	            restore: "Restore",
+	            showAll: "Show all",
+	            showNone: "Show none",
+				order: 'alpha'
+				//"buttonText": "columns <img src=\"/datatableServersideExample/images/caaret.png\"/>"
+	        },
+		    "language": {
+	            "infoFiltered": ""
+	        },
+	        "dom": 'Cf<"toolbar"">rtip',
+	
+	      });
+	}
+});
+</script> -->
+
+<script>
+jQuery(document).ready(function() {
+	var table;
+	console.log("hello");
+	var tableName1=$( "#HistorytableName").val();
+	//alert(tableName1);
+	var tableName=$( "#tableName").val();
+	//alert(tableName);
+	var idApp=$( "#idApp" ).val();
+	//alert(tableName + " " + idApp);
+	//alert(tableName);
+		if(tableName1==$("#HistorytableName").val()){
+	//alert(tableName1);
+
+	table = $('#HistoryAnomalyTable').dataTable({
+		  	"bPaginate": true,
+		  	"order": [ 0, 'asc' ],
+		  	"bInfo": true,
+		  	"iDisplayStart":0,
+		  	"bProcessing" : true,
+		 	"bServerSide" : true,
+		 	"dataSrc": "",
+		 	'sScrollX' : true,
+		 	"sAjaxSource" : path+"/TranDetailIdentityTable?tableName="+tableName1,
+		 	"dom": 'C<"clear">lfrtip',
+			colVis: {
+				"align": "right",
+	            restore: "Restore",
+	            showAll: "Show all",
+	            showNone: "Show none",
+				order: 'alpha'
+				//"buttonText": "columns <img src=\"/datatableServersideExample/images/caaret.png\"/>"
+	        },
+		    "language": {
+	            "infoFiltered": ""
+	        },
+	        "dom": 'Cf<"toolbar"">rtip',
+	
+	      });
+		}
+	if(tableName==$( "#tableName").val()){
+	table = $('#RecordAnomalyTable').dataTable({
+		  	"bPaginate": true,
+		  	"order": [ 0, 'asc' ],
+		  	"bInfo": true,
+		  	"iDisplayStart":0,
+		  	"bProcessing" : true,
+		 	"bServerSide" : true,
+		 	"dataSrc": "",
+		 	'sScrollX' : true,
+		 	"sAjaxSource" : path+"/recordAnomalyTable?tableName="+tableName+"&idApp="+idApp,
+		 	"dom": 'C<"clear">lfrtip',
+			colVis: {
+				"align": "right",
+	            restore: "Restore",
+	            showAll: "Show all",
+	            showNone: "Show none",
+				order: 'alpha'
+				//"buttonText": "columns <img src=\"/datatableServersideExample/images/caaret.png\"/>"
+	        },
+		    "language": {
+	            "infoFiltered": ""
+	        },
+	        "dom": 'Cf<"toolbar"">rtip',
+	
+	      });
+	}
+
+
+});
+</script> 
+
+<script>
+$( "#rcdiv" ).on( "click", function() {
+    console.log("rcdiv");
+    var form_data = {
+             tableName : $('#tableName').val(),
+        };
+    var myInterval = setInterval(function(){
+          $.ajax({
+              url: "./statusBarCsvDownload",
+              type: 'POST',
+              datatype: 'json',
+              data: form_data,
+              success: function(message1) {
+                 var j_obj1 = $.parseJSON(message1);
+                 var percentage=j_obj1.percentage;
+                 $('.CSVStatus').addClass('hidden');
+                 $('#rcdivbar').removeClass('hidden');
+                 $('.progressbar').css("width", percentage+'%');
+                 $('.progressbar').html("Downloading CSV...   "+percentage+'%');
+                  console.log(j_obj1);//return false;
+                  if(percentage>95){
+                      //toastr.info("CSV Downloaded successfully");
+                          clearInterval(myInterval);
+                          $('#rcdivbar').addClass('hidden');
+                          $('.CSVStatus').removeClass('hidden');
+                      }
+              },
+              error: function(xhr, textStatus, errorThrown)
+              {
+                  console.log(errorThrown);
+              }
+        
+      })
+        }, 3000);
+});
+
+
+/* jQuery(document).ready(function() {
+	var table;
+	console.log("hello");
+	var tableName=$( "#tableName").val();
+	var idApp=$( "#idApp" ).val();
+	//alert(tableName);
+	table = $('#RecordAnomalyTable').dataTable({
+		  	"bPaginate": true,
+		  	"order": [ 0, 'asc' ],
+		  	"bInfo": true,
+		  	"iDisplayStart":0,
+		  	"bProcessing" : true,
+		 	"bServerSide" : true,
+		 	"dataSrc": "",
+		 	'sScrollX' : true,
+		 	"sAjaxSource" : path+"/recordAnomalyTable?tableName="+tableName+"&idApp="+idApp,
+		 	"dom": 'C<"clear">lfrtip',
+			colVis: {
+				"align": "right",
+	            restore: "Restore",
+	            showAll: "Show all",
+	            showNone: "Show none",
+				order: 'alpha'
+				//"buttonText": "columns <img src=\"/datatableServersideExample/images/caaret.png\"/>"
+	        },
+		    "language": {
+	            "infoFiltered": ""
+	        },
+	        "dom": 'Cf<"toolbar"">rtip',
+	
+	      });
+}); */
+
+ 
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+    	var g1, g2, g3, g4, g5, g6, g7;
+
+      g1 = new JustGage({
+        id: "g1",
+        decimals: true,
+        value: ${recordAnomalyScore},
+        min: 0,
+        max: 100,
+       /*  title: "Custom Width", */
+        label: "",
+        gaugeWidthScale: 0.5,
+        customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+            {"lo":50,"hi":100,"color":"#008000"}],
+      });
+      g2 = new JustGage({
+          id: "g2",
+          decimals: true,
+          value: ${nullCountScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g3 = new JustGage({
+          id: "g3",
+          decimals: true,
+          value: ${allFieldsScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g4 = new JustGage({
+          id: "g4",
+          decimals: true,
+          value: ${identityFieldsScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g5 = new JustGage({
+          id: "g5",
+          decimals: true,
+          value: ${numericalFieldScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g6 = new JustGage({
+          id: "g6",
+          decimals: true,
+          value: ${stringFieldScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g7 = new JustGage({
+          id: "g7",
+          decimals: true,
+          value: ${recordFieldScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g8 = new JustGage({
+          id: "g8",
+          decimals: true,
+          value: ${ruleScoreDF},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g9 = new JustGage({
+          id: "g9",
+          decimals: true,
+          value: ${dataDriftScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g10 = new JustGage({
+          id: "g10",
+          decimals: true,
+          value: ${totalDQI},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });
+      g11 = new JustGage({
+          id: "g11",
+          decimals: true,
+          value: ${TimelinessCheckScore},
+          min: 0,
+          max: 100,
+         /*  title: "Custom Width", */
+          label: "",
+          gaugeWidthScale: 0.5,
+          customSectors : [{"lo":0,"hi":50,"color":"#f9c802"},
+              {"lo":50,"hi":100,"color":"#008000"}],
+        });  
+    });
+    /* $(document).ready( function () {
+    	  var table = $('#dashboardTable').DataTable({
+    	    "columnDefs": [
+    	        {"className": "dt-center", "targets": "_all"}
+    	      ],
+    	      "bSort" : false,
+    	      "searching": false,
+    	      "lengthChange": false,
+    	      "bLengthChange": false,
+    	      "bPaginate": false,
+    	      "bPaginate": false,
+    	      "bLengthChange": false,
+    	      "bFilter": true,
+    	      "bInfo": false,
+    	      "bAutoWidth": false
+    	  });
+    	} ); */
+    </script>
+<!-- this code for recordanomaly download csv bar -->
+<script>
+
+   	$( "#rcdiv" ).on( "click", function() {
+   		console.log("rcdiv");
+   		var form_data = {
+   				 tableName : $('#tableName').val(),
+   	        };
+   		var myInterval = setInterval(function(){
+   			  $.ajax({
+   	              url: "./statusBarCsvDownload",
+   	              type: 'POST',
+   	              datatype: 'json',
+   	              data: form_data,
+   	              success: function(message1) {
+   	                 var j_obj1 = $.parseJSON(message1);
+   	                 var percentage=j_obj1.percentage;
+   	                 $('.CSVStatus').addClass('hidden');
+   	                 $('#rcdivbar').removeClass('hidden');
+   	                 $('.progressbar').css("width", percentage+'%');
+   	                 $('.progressbar').html("Downloading CSV...   "+percentage+'%');
+   	                  console.log(j_obj1);//return false;
+   	                  if(percentage>95){
+   	                	  //toastr.info("CSV Downloaded successfully");
+   	                          clearInterval(myInterval);
+   	                          $('#rcdivbar').addClass('hidden');
+   	                          $('.CSVStatus').removeClass('hidden');
+   	                      }
+   	              },
+   	              error: function(xhr, textStatus, errorThrown) 
+   	              {
+   	                  console.log(errorThrown);
+   	              }
+   	         
+   	      })
+   	        }, 3000);
+   	});
+  $(document).ready(function() {
+    	
+        $('.hrefCall').click(function() {
+        	 $('#popSample').addClass('is-visible');
+            var validationCheck=$(this).attr('id');
+           // alert($(this).attr('id'));
+            var form_data = {
+                validationCheck: validationCheck,
+                idApp: $("#idApp").val(),
+            };
+            $('#loading-data-progress').removeClass('hidden').show();	
+            console.log(form_data);
+            $.ajax({
+                url: './getDQIScoresMap',
+                type: 'POST',
+                datatype: 'json',
+                data: form_data,
+                success: function(listOfValues) {
+                    console.log(listOfValues);
+                    if (typeof listOfValues !== "undefined" && listOfValues != "") {
+                    	
+                    	google.load("visualization", "1", {packages:["corechart"]});
+                        google.setOnLoadCallback(drawChart);
+                        var data1 = new google.visualization.DataTable();
+                        data1.addColumn('string', 'Date (Run)');
+              		    data1.addColumn('number', 'DQI');
+              		 
+              		  //data1.addRow([new Date("2016-02-04"),90]);
+                        $.each(listOfValues, function(key, value) {	
+                        	$.each( value, function( i, l ){
+                        		 // alert( "Index #" + i + ": " + l );
+        					data1.addRow([key,l]);
+                        	});
+        				});
+                        data1.sort({column: 0, desc: true});
+                        var title="";
+                        if(validationCheck=="Aggregate DQI Summary"){
+                        	title=validationCheck;
+                        }else{
+                        	title=validationCheck + " DQI";
+                        }
+                        var len = $.map(listOfValues, function(n, i) { return i; }).length;
+                        console.log(len);
+                        var showTextEvery=2;
+                        if(len>=40){
+                        	showTextEvery=8;
+                        }else if(len>=30){
+                        	showTextEvery=7;
+                        }else if(len>=20){
+                        	showTextEvery=4;
+                        }else if(len>=6){
+                        	showTextEvery=2;
+                        }else if(len<=5){
+                        	showTextEvery=1;
+                        }
+                        //alert(len);
+                        var options = {
+                            title: title,
+                            hAxis: {title: 'Date (Run)',  titleTextStyle: {color: '#333'},showTextEvery:showTextEvery},
+                            vAxis: {minValue: 0},
+                            height: 250,
+                            width: 1000
+                        };
+                        $('#loading-data-progress').addClass('hidden');
+                        var chart = new google.visualization.AreaChart(document.getElementById('chartDiv'));
+                        chart.draw(data1, options);
+                    	
+                    	
+                        $('#chartDiv').removeClass('hidden');
+                    } else {
+                        $('#chartDiv').addClass('hidden');
+                    }
+
+                },
+                error: function(xhr, textStatus,
+                    errorThrown) {
+                    $('#initial').hide();
+                    $('#fail').show();
+                }
+            });
+        });
+        $( "#dqiDataCloseBtn" ).click(function() {
+        	  $('#popSample').removeClass('is-visible');
+        	});
+    });
+   	 
+   	 
+   	 </script>
+</html>

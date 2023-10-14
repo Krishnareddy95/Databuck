@@ -1,0 +1,1 @@
+ALTER TABLE  `listDataAccess` MODIFY  `domain` TEXT  ;

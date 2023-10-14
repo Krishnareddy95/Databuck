@@ -1,0 +1,28 @@
+package com.databuck.dto;
+
+import java.util.ArrayList;
+
+public class GetValidationCheckByIdResponse {
+
+	private ArrayList<ValidationCheckByIdDto> result;
+	private String fail;
+
+	public ArrayList<ValidationCheckByIdDto> getResult() {
+		return result;
+	}
+
+	public void setResult(ArrayList<ValidationCheckByIdDto> result) {
+		this.result = result;
+	}
+
+	public String getFail() {
+		return fail;
+	}
+
+	public void setFail(String fail) {
+		this.fail = fail;
+	}
+	
+
+
+}

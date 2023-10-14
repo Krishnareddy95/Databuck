@@ -1,0 +1,1222 @@
+{
+   "resultsdb":[
+      {
+	     "propertyNo":1,
+         "propertyName":"db1.driver",
+         "propertyDesc":"driver details for resultsdb database",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":2,
+         "propertyName":"db1.schema.name",
+         "propertyDesc":"schema details for resultsdb database",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+	   {
+	     "propertyNo":3,
+         "propertyName":"db1.url",
+         "propertyDesc":"url details to connect to resultsdb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+	  {
+	     "propertyNo":4,
+         "propertyName":"db1.user",
+         "propertyDesc":"user details for resultsdb database",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },          
+      {
+	     "propertyNo":5,
+         "propertyName":"db1.pwd",
+         "propertyDesc":"password for resultsdb database",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":6,
+         "propertyName":"db1.pwd1",
+         "propertyDesc":"password for resultsdb database",
+         "isMandatory":"false",
+         "isPassword":"true",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }
+   ],
+   "mongodb":[
+      {
+	     "propertyNo":1,
+         "propertyName":"ipAddress",
+         "propertyDesc":"ipaddress to connect to mongodb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":2,
+         "propertyName":"port",
+         "propertyDesc":"port details of mongodb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":3,
+         "propertyName":"databaseName",
+         "propertyDesc":"mongodb database name to be connected ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }
+   ],
+   "activedirectory":[
+      {
+	     "propertyNo":1, 
+         "propertyName":"Context.INITIAL_CONTEXT_FACTORY",
+         "propertyDesc":"initial context",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":2, 
+         "propertyName":"Context.PROVIDER_URL",
+         "propertyDesc":"provider url ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":3, 
+         "propertyName":"Context.SECURITY_AUTHENTICATION",
+         "propertyDesc":"security authentication ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":4, 
+         "propertyName":"Context.SECURITY_PRINCIPAL",
+         "propertyDesc":"user id ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":5, 
+         "propertyName":"Context.SECURITY_CREDENTIALS",
+         "propertyDesc":"security credentials ",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":6, 
+         "propertyName":"searchBase",
+         "propertyDesc":"searchBase",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":7, 
+         "propertyName":"Domainforalluser",
+         "propertyDesc":"domain name for all users ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":8, 
+         "propertyName":"Loginuid",
+         "propertyDesc":"Loginuid",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":9, 
+         "propertyName":"userObjectClass",
+         "propertyDesc":"user object class ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":10, 
+         "propertyName":"attributetofetch",
+         "propertyDesc":"attributetofetch ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":11, 
+         "propertyName":"defaultrole",
+         "propertyDesc":"defaultrole of an user",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":12, 
+         "propertyName":"domainPosition",
+         "propertyDesc":"domainPosition",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":13, 
+         "propertyName":"sorPosition",
+         "propertyDesc":"sorPosition",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":14, 
+         "propertyName":"rolePosition",
+         "propertyDesc":"rolePosition",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":15, 
+         "propertyName":"groupFilter",
+         "propertyDesc":"groupFilter",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }
+   ],
+   "dynamicVariable":[
+      {
+	     "propertyNo":1, 
+         "propertyName":"db.driver",
+         "propertyDesc":"driver details to connect to postgressql",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":2, 
+         "propertyName":"db.url",
+         "propertyDesc":"url to connect to postgressql",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":3, 
+         "propertyName":"db.user",
+         "propertyDesc":"user details to connect to postgressql ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":4, 
+         "propertyName":"db.pwd",
+         "propertyDesc":"pwd to connect to postgressql",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":5, 
+         "propertyName":"target.table.dynamicFilterQuery",
+         "propertyDesc":"query for target table ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":6, 
+         "propertyName":"src.table.dynamicFilterQuery",
+         "propertyDesc":"query for source table ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }
+   ],
+   "cluster":[
+      {
+	     "propertyNo":1, 
+         "propertyName":"deploymode",
+         "propertyDesc":"deploy mode ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"<>2 (local)"
+      },
+      {
+	     "propertyNo":2, 
+         "propertyName":"hive_mode",
+         "propertyDesc":"hive details ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":3, 
+         "propertyName":"kerberos_enabled",
+         "propertyDesc":"kerberos enabled",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":4, 
+         "propertyName":"numberOfPartitions",
+         "propertyDesc":"number of partitions in spark",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":5, 
+         "propertyName":"app_mode",
+         "propertyDesc":"app_mode ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":6, 
+         "propertyName":"EMRCluster",
+         "propertyDesc":"connect to EMR cluster ",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":7, 
+         "propertyName":"hive_context_enabled",
+         "propertyDesc":"Property to enable or disable hive context",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      }
+   ],
+   "appdb":[
+      {
+	     "propertyNo":1, 
+         "propertyName":"db.user",
+         "propertyDesc":"user details to connect to appdb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":2, 
+         "propertyName":"db.schema.name",
+         "propertyDesc":"schema details to connect to appdb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":3, 
+         "propertyName":"db.url",
+         "propertyDesc":"url details to connect to appdb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":4, 
+         "propertyName":"db.pwd",
+         "propertyDesc":"password details to connect to appdb",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":5, 
+         "propertyName":"db.driver",
+         "propertyDesc":"driver details to connect to appdb",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":6, 
+         "propertyName":"s3.aws.accessKey",
+         "propertyDesc":"Aws accesskey to connect to s3",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":7, 
+         "propertyName":"s3.bucketname",
+         "propertyDesc":"aws s3 bucket name",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":8, 
+         "propertyName":"s3.aws.secretKey",
+         "propertyDesc":"aws secret key to connect to s3",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":9, 
+         "propertyName":"s3CsvPath",
+         "propertyDesc":"Csv folder path on s3",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":10, 
+         "propertyName":"sns.aws.accessKey",
+         "propertyDesc":"aws accesskey for sns",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":11, 
+         "propertyName":"sns.aws.secretKey",
+         "propertyDesc":"aws secret key for sns",
+         "isMandatory":"false",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":12, 
+         "propertyName":"sns.aws.topicARN",
+         "propertyDesc":"topic created for SNS",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":13, 
+         "propertyName":"filemonitor.aws.accessKey",
+         "propertyDesc":"aws secret key for File monitor",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":14, 
+         "propertyName":"filemonitor.aws.secretKey",
+         "propertyDesc":"aws secret key for file monitor",
+         "isMandatory":"false",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":15, 
+         "propertyName":"filemonitor.sns.aws.topicARN",
+         "propertyDesc":"topic created for SNS - File monitor",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":16, 
+         "propertyName":"filemonitor.sns.aws.topic.region",
+         "propertyDesc":"region of topic created for SNS -File monitor",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":17, 
+         "propertyName":"filemonitor.queue.url",
+         "propertyDesc":"url details for file monitor queue",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":18, 
+         "propertyName":"filemonitor.queue.region",
+         "propertyDesc":"region details for filemonitor queue",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":19, 
+         "propertyName":"filemonitor.processFMQueueRequest.resturl",
+         "propertyDesc":"url for File monitor queue request",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":20, 
+         "propertyName":"filemonitor.readFileMonitorRules.resturl",
+         "propertyDesc":"url for file monitor rules",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":21, 
+         "propertyName":"mailSender",
+         "propertyDesc":"mail sender details to send email",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":22, 
+         "propertyName":"mailRecepients",
+         "propertyDesc":"mail recepients details to send email",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":23, 
+         "propertyName":"smtp_host",
+         "propertyDesc":"host details for smtp - send email",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":24, 
+         "propertyName":"smtp_port",
+         "propertyDesc":"port details for smtp - send email",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":25, 
+         "propertyName":"smtp_username",
+         "propertyDesc":"user name for smtp - send email",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":26, 
+         "propertyName":"smtp_password",
+         "propertyDesc":"password for smtp - send email",
+         "isMandatory":"true",
+         "isPassword":"true",
+         "isEncrypt":"true",
+         "defaultValue":null
+      },
+	  {
+	     "propertyNo":27, 
+         "propertyName":"number.Format",
+         "propertyDesc":"number format ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":28, 
+         "propertyName":"number.FormatCol",
+         "propertyDesc":"number format col",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":29, 
+         "propertyName":"match.numberRegexUS",
+         "propertyDesc":"number Regex US",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":30, 
+         "propertyName":"match.numberRegex",
+         "propertyDesc":"number Regex",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":31, 
+         "propertyName":"match.numberRegexEU",
+         "propertyDesc":"number regex EU",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":32, 
+         "propertyName":"match.dateRegexFormate",
+         "propertyDesc":"date regex format",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":33, 
+         "propertyName":"match.string",
+         "propertyDesc":"regex for string",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":34, 
+         "propertyName":"isTemplateUpdationSupported",
+         "propertyDesc":"template updation supported or not",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":35, 
+         "propertyName":"keyBasedDateRuleCheck",
+         "propertyDesc":"date rule check",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":36, 
+         "propertyName":"match.dateRegexFormateD",
+         "propertyDesc":"date Regex Format",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":37, 
+         "propertyName":"match.numberRegexUSD",
+         "propertyDesc":"number Regex for US",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":38, 
+         "propertyName":"match.numberRegexEUD",
+         "propertyDesc":"number Regex for EU",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":39, 
+         "propertyName":"date.format.timeliness",
+         "propertyDesc":"date format for timeliness",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":40, 
+         "propertyName":"deploymentMode",
+         "propertyDesc":"deployment mode - 2 for local and others for cluster",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":41, 
+         "propertyName":"date.format.Historic",
+         "propertyDesc":"date format for historic load",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":42, 
+         "propertyName":"date.format.Incremental",
+         "propertyDesc":"date format for incremental load ",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":43, 
+         "propertyName":"date.format.Incremental.db",
+         "propertyDesc":"date format for incremental load in database",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":44, 
+         "propertyName":"csvWriteLimit",
+         "propertyDesc":"number of records written into csv file",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"100"
+      },
+      {
+	     "propertyNo":45, 
+         "propertyName":"isActiveDirectoryAuthentication",
+         "propertyDesc":"variable for ActiveDirectory Authentication",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":46, 
+         "propertyName":"mailxEmailNotification",
+         "propertyDesc":"variable for mail email notification",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":47, 
+         "propertyName":"SNSNotifications",
+         "propertyDesc":" variable for SNS Notifications",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":48, 
+         "propertyName":"dynamicVariableEnabled",
+         "propertyDesc":"dynamicVariableEnabled",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":49, 
+         "propertyName":"retention.dataquality.days",
+         "propertyDesc":"retention dataquality days",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"30"
+      },
+      {
+	     "propertyNo":50, 
+         "propertyName":"retention.datamatching.days",
+         "propertyDesc":"retention datamatching days",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"30"
+      },
+      {
+	     "propertyNo":51, 
+         "propertyName":"killAutomatically",
+         "propertyDesc":"kill the job automatically",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":52, 
+         "propertyName":"killTime",
+         "propertyDesc":"max time to kill job",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"01:00"
+      },
+      {
+	     "propertyNo":53, 
+         "propertyName":"maxActiveJobCount",
+         "propertyDesc":"variable for max Active job count",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"16"
+      },
+      {
+	     "propertyNo":54, 
+         "propertyName":"release.phase",
+         "propertyDesc":"release phase",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":55, 
+         "propertyName":"cisco.execute.job.flow",
+         "propertyDesc":"property for execution of cisco job flow ",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":56, 
+         "propertyName":"aver.report.link",
+         "propertyDesc":"aver report link",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":57, 
+         "propertyName":"isRuleCatalogDiscovery",
+         "propertyDesc":"variable for RuleCatalog Discovery",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":58, 
+         "propertyName":"jbpm.workflow.url",
+         "propertyDesc":"jbpm.workflow.url",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":59, 
+         "propertyName":"jbpm.workflow.user",
+         "propertyDesc":"jbpm.workflow.user",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":60, 
+         "propertyName":"jbpm.workflow.password",
+         "propertyDesc":"jbpm.workflow.password",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":61, 
+         "propertyName":"snowflake.securemode",
+         "propertyDesc":"Variable to enable/disable snowflake secure mode",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":62, 
+         "propertyName":"hdfs_result_directory",
+         "propertyDesc":"Variable to mention the hdfs directory where result files will be stored, when deployment mode is hdfs",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":63, 
+         "propertyName":"exportImportMode",
+         "propertyDesc":"Variable to enable/disable Import Export feature",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":64, 
+         "propertyName":"filemonitoring.fullfile.check",
+         "propertyDesc":"Variable to enable/disable fileMonitoring full file data check",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":65, 
+         "propertyName":"sqs.notifications",
+         "propertyDesc":"Variable to enable/disable SQS Notifications",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":66, 
+         "propertyName":"sqs.notifications.queue.url",
+         "propertyDesc":"Variable to mention SQS queue Url",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":67, 
+         "propertyName":"sqs.notifications.queue.region",
+         "propertyDesc":"Variable to mention SQS queue region",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":68, 
+         "propertyName":"s3.decrypt.passphrase",
+         "propertyDesc":"Variable to mention the passphrase used to decrypt the encrypted files",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":69, 
+         "propertyName":"sns.notifications.iamrole",
+         "propertyDesc":"Variable to enable/disable SNS Notifications using IAMRole",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":70, 
+         "propertyName":"smtp_mode",
+         "propertyDesc":"Variable to specify the smtp mode auth/noAuth",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":71, 
+         "propertyName":"retention.dataquality.days",
+         "propertyDesc":"Specify how many days old data has to be deleted",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":30
+      },
+      {
+	     "propertyNo":72, 
+         "propertyName":"retention.datamatching.days",
+         "propertyDesc":"Specify how many days old data has to be deleted",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":30
+      },
+      {
+	     "propertyNo":73, 
+         "propertyName":"rootcause.analysis.threshold",
+         "propertyDesc":"Root cause analysis threshold value",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":6
+      },
+      {
+	     "propertyNo":74, 
+         "propertyName":"custom_sampling_count",
+         "propertyDesc":"Custom Sampling count for analysis",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":10000
+      },
+      {
+	     "propertyNo":75, 
+         "propertyName":"isTestApprovalRequired",
+         "propertyDesc":"isTestApprovalRequired",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":76, 
+         "propertyName":"isURLSecurityRequired",
+         "propertyDesc":"isURLSecurityRequired",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":77, 
+         "propertyName":"mapr.ticket.enabled",
+         "propertyDesc":"Property to enable or disable usage of ticket during script trigger",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":78, 
+         "propertyName":"hdfs.accesslog.path",
+         "propertyDesc":"Access log path in hdfs",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":79, 
+         "propertyName":"colibra.metadata.url",
+         "propertyDesc":"Colibra url to get the metdata from steel - Wellsfargo specific",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":80, 
+         "propertyName":"custom.execution.record.count",
+         "propertyDesc":"Specify the number of records to be executed for test run",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":81, 
+         "propertyName":"sns.topic.region",
+         "propertyDesc":"Variable to mention SNS Topic region",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":82, 
+         "propertyName":"advancedrules.reasonability.disable",
+         "propertyDesc":"Variable to disable reasonability advanced rules",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":83, 
+         "propertyName":"ruledefectcode.rest.url",
+         "propertyDesc":"Variable to hold the rest api url for getting the defect code of rule",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue": null
+      },
+      {
+	     "propertyNo":84, 
+         "propertyName":"logon_manager.enabled",
+         "propertyDesc":"Variable to enable logonManager to get database credentials",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":85, 
+         "propertyName":"logon_manager.appdb.cmd",
+         "propertyDesc":"Property to hold shell command to get appdb mysql connection details",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue": null
+      },
+      {
+	     "propertyNo":86, 
+         "propertyName":"logon_manager.resultdb.cmd",
+         "propertyDesc":"Property to hold shell command to get resultdb mysql connection details",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue": null
+      },
+      {
+	     "propertyNo":87, 
+         "propertyName":"advancedrules.colrltnship.uniquedatacount",
+         "propertyDesc":"property to specify eligible unique data count of column for columnRelationship rules",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"50"
+      },
+      {
+	     "propertyNo":88, 
+         "propertyName":"manualDBMigrationEnabled",
+         "propertyDesc":"property to specify if database migration or upgrade is done manually",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":89, 
+         "propertyName":"aging.fullLoad.exceptionDataPath",
+         "propertyDesc":"property to specify the location to store the aging exception report for full Load Data",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      },
+      {
+	     "propertyNo":90, 
+         "propertyName":"aging.exceptionData.limit",
+         "propertyDesc":"property to specify a record limit upto which aging report generation is allowed",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"5000000"
+      },
+      {
+	     "propertyNo":91, 
+         "propertyName":"databuck.result.fileType",
+         "propertyDesc":"property to specify the type in which file has to be saved[Eg.parquet, csv]",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"csv"
+      },
+      {
+	     "propertyNo":92, 
+         "propertyName":"datadrift.potentialduplicates.enabled",
+         "propertyDesc":"property to enable or disable detection of potential duplicates in datadrift",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":93, 
+         "propertyName":"RuleCatalogApproverRole",
+         "propertyDesc":"property to configure role name which can approve rule catalog",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"N"
+      },
+      {
+	     "propertyNo":94, 
+         "propertyName":"serviceAuthenticationType",
+         "propertyDesc":"property to select authentication type for Rest API's (token or ldap)'",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":"token"
+      },
+      {
+	     "propertyNo":95, 
+         "propertyName":"serviceLdapGroup",
+         "propertyDesc":"Property to specify the ldap group of the users who can access the REST API",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue": null
+      },
+      {
+	     "propertyNo":96, 
+         "propertyName":"dq.unsupported.datatypes",
+         "propertyDesc":"property to write comma separated list of unsupported datatypes in table metadata",
+         "isMandatory":"false",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }            
+   ],
+   "licenseKey":[
+      {
+	     "propertyNo":1,
+         "propertyName":"LicenseKey",
+         "propertyDesc":"databuck License Key",
+         "isMandatory":"true",
+         "isPassword":"false",
+         "isEncrypt":"false",
+         "defaultValue":null
+      }
+   ]
+}

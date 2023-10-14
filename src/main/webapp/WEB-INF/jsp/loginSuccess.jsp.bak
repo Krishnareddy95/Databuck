@@ -1,0 +1,30 @@
+
+
+
+<%@page import="com.databuck.service.RBACController"%>
+<jsp:include page="header.jsp" />
+<jsp:include page="container.jsp" />
+
+<%
+	if (RBACController.rbac("Results", "R", session)) {
+		response.sendRedirect("dashboard_View");
+	} else if (RBACController.rbac("Data Connection", "R", session)) {
+		response.sendRedirect("dataConnectionView");
+	} else if (RBACController.rbac("Data Template", "R", session)) {
+		response.sendRedirect("datatemplateview");
+	} else if (RBACController.rbac("Extend Template & Rule", "R", session)) {
+		response.sendRedirect("tempview");
+	} else if (RBACController.rbac("Validation Check", "R", session)) {
+		response.sendRedirect("validationCheck_View");
+	} else if (RBACController.rbac("Tasks", "R", session)) {
+		response.sendRedirect("viewSchedules");
+	} else if (RBACController.rbac("User Settings", "R", session)) {
+		response.sendRedirect("accessControls");
+	} else
+		response.sendRedirect("welcomePage");
+%>
+
+<jsp:include page="footer.jsp" />
+
+
+

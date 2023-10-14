@@ -1,0 +1,1 @@
+ALTER TABLE listSchedule MODIFY COLUMN time  TIME;

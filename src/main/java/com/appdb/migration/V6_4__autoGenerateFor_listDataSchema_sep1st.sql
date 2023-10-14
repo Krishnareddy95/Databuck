@@ -1,0 +1,1 @@
+ALTER TABLE  `listDataSchema` ADD  `autoGenerate` VARCHAR( 10 ) NULL DEFAULT  'N' AFTER  `krb5conf` ;

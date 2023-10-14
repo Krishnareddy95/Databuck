@@ -1,0 +1,3 @@
+schema_name,table_name,file_indicator,dayOfWeek,hourOfDay,expected_time,expected_file_count,start_hour,end_hour,frequency
+conn_files,dataset1_allChecks.csv,frequency,Wednesday,,,3,10,17,20
+conn_files,ArrayData_allChecks.csv,hourly,Wednesday,15,10,3,,,

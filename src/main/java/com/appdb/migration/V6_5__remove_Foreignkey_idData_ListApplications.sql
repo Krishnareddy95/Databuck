@@ -1,0 +1,1 @@
+ALTER TABLE `listApplications` DROP FOREIGN KEY `lapp_ibfk_1` ;

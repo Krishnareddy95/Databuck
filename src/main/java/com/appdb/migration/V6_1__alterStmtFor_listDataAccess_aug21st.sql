@@ -1,0 +1,2 @@
+ALTER TABLE  `listDataAccess` CHANGE  `hostName`  `hostName` VARCHAR( 500 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ;
+ALTER TABLE  `listDataSchema` ADD  `keytab` VARCHAR( 500 ) NULL DEFAULT NULL AFTER  `domain` ;

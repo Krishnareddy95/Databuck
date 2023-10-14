@@ -1,0 +1,57 @@
+package com.databuck.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Service;
+
+import com.databuck.dao.ILoginDAO;
+
+
+@Service
+public class LoginServiceImpl implements LoginService {
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	@Autowired
+	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+		this.jdbcTemplate = jdbcTemplate;
+	}
+	
+	
+	
+	@Autowired
+	private ILoginDAO loginDAO;
+	
+	public String getFirstNameFromUserTable(Long idUser){
+		String query="select firstName,lastName from User where idUser="+idUser;
+		SqlRowSet queryForRowSet = jdbcTemplate.queryForRowSet(query);
+		String firstName="";
+		while(queryForRowSet.next()){
+			firstName=queryForRowSet.getString(1)+" "+queryForRowSet.getString(2);
+		}
+		return firstName;
+	}
+	
+	@Override
+	public Long userAuthentication(String email, String password) {
+		return loginDAO.userAuthentication( email,password);
+	}
+	public Long getRolesFromUserRoleTable( Long idUser){
+		String query="select idRole from UserRole where idUser="+idUser;
+		Long idRole = jdbcTemplate.queryForObject(query,Long.class);
+		return idRole;
+	}
+	public SqlRowSet getIdTaskandAccessControlFromRoleModuleTable(Long idRole){
+		String query="select * from RoleModule where idRole="+idRole;
+		SqlRowSet roleModuleTable = jdbcTemplate.queryForRowSet(query);
+		return roleModuleTable;
+	}
+	public String getTaskNameFromModuleTable(long idTask){
+		String query="select taskName from Module where idTask="+idTask;
+		String taskName = jdbcTemplate.queryForObject(query,String.class);
+		return taskName;
+	}
+	
+}
+
+

@@ -1,0 +1,2 @@
+ALTER TABLE  `listDataSchema` ADD  `krb5conf` VARCHAR( 500 ) NULL AFTER  `keytab` ;
+ALTER TABLE  `listDataSchema` CHANGE  `keytab`  `gss_jaas` VARCHAR( 500 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL ;

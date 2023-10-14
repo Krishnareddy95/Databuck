@@ -1,0 +1,351 @@
+package com.databuck.controller;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.collections.map.MultiValueMap;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.databuck.bean.ListColRules;
+import com.databuck.bean.ListColGlobalRules;
+import com.databuck.bean.ListDataDefinition;
+import com.databuck.bean.ListDataSource;
+import com.databuck.bean.listDataAccess;
+import com.databuck.bean.ruleFields;
+import com.databuck.dao.GlobalRuleDAO;
+import com.databuck.dao.ITemplateViewDAO;
+import com.databuck.service.RBACController;
+
+@Controller
+public class GlobalRuleController {
+
+	@Autowired
+	GlobalRuleDAO GlobalRuleDAO;
+
+	@Autowired
+	ITemplateViewDAO templateviewdao;
+	@Autowired
+	public JdbcTemplate jdbcTemplate;
+	@Autowired
+	private RBACController rbacController;
+
+	public void setGlobalRuleDAO(GlobalRuleDAO GlobalRuleDAO) {
+		this.GlobalRuleDAO = GlobalRuleDAO;
+	}
+
+	@RequestMapping(value = "/AddNewRuleGlobal", method = RequestMethod.GET)
+	public ModelAndView addNewRule(HttpServletRequest request, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "C", session);
+		if (rbac) {
+
+			List<ListDataSource> getlistdatasourcesname = templateviewdao.getlistdatasourcesname();
+			ModelAndView modelandview = new ModelAndView("GlobalAddNewRule");
+			modelandview.addObject("getlistdatasourcesname", getlistdatasourcesname);
+			modelandview.addObject("currentSection", "Extend Template & Rule");
+			modelandview.addObject("currentLink", "Add New Global Rule");
+			return modelandview;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/createGlobalRule", method = RequestMethod.POST)
+	public void createExtendTemplateRule(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam String name, @RequestParam String description, @RequestParam String ruleExpression,
+			@RequestParam String domain) {
+		Map<String, String> tempmap = new HashMap<String, String>();
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("idUser=" + idUser);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		System.out.println("name=" + name);
+		System.out.println("domain=" + domain);
+		System.out.println("description=" + description);
+		System.out.println("ruleExpression=" + ruleExpression);
+
+		ListColGlobalRules lcr = new ListColGlobalRules();
+		lcr.setRuleName(name);
+		lcr.setDescription(description);
+		lcr.setExpression(ruleExpression);
+		lcr.setDomain(domain);
+
+		int checkIfDuplicateSqlRowSet = GlobalRuleDAO.checkIfDuplicateGlobalRule(lcr);
+		try {
+			if (checkIfDuplicateSqlRowSet >= 1) {
+				try {
+					JSONObject json = new JSONObject();
+					json.put("fail", "The Rule Expression already exists");
+					response.getWriter().println(json);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			} else {
+				GlobalRuleDAO.insertintolistColRules(lcr);
+				try {
+					JSONObject json = new JSONObject();
+					json.put("success", "Extended Template Rule created successfully");
+					response.getWriter().println(json);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			GlobalRuleDAO.insertintolistColRules(lcr);
+			try {
+				JSONObject json = new JSONObject();
+				json.put("success", "Extended Template Rule created successfully");
+				response.getWriter().println(json);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		}
+		int rule_id = GlobalRuleDAO.getruleId(name, domain);
+		if (session.getAttribute("userrule") != null) {
+			tempmap = (Map<String, String>) session.getAttribute("userrule");
+		}
+		for (Map.Entry<String, String> entry : tempmap.entrySet()) {
+			System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
+
+			ruleFields rc = new ruleFields();
+			rc.setRule_id(rule_id);
+			rc.setUsercolumns(entry.getKey());
+			rc.setPossiblenames(entry.getValue());
+			GlobalRuleDAO.insertintouserColRules(rc);
+		}
+	}
+
+	@RequestMapping(value = "/viewGlobalRules")
+	public ModelAndView getListDataSource(ModelAndView model, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "R", session);
+		if (rbac) {
+
+			List<ListColGlobalRules> listColRulesData = GlobalRuleDAO.getListColRulesForViewRules();
+			for (ListColGlobalRules l : listColRulesData) {
+				System.out.println(l.getRuleName());
+			}
+
+			model.addObject("listColRulesData", listColRulesData);
+			model.addObject("currentSection", "Extend Template & Rule");
+			model.addObject("currentLink", "View Global Rules");
+			model.setViewName("GlobalViewRules");
+			return model;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/deleteGlobalRulesData", method = RequestMethod.POST)
+	public void deleteIdListColRulesData(HttpServletRequest request, HttpServletResponse response, HttpSession session,
+			@RequestParam long globalRuleId) {
+
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		System.out.println("idListColrules=" + globalRuleId);
+		GlobalRuleDAO.deleteGlobalRulesData(globalRuleId);
+		try {
+			response.getWriter().println("success");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@RequestMapping(value = "/editGlobalRule", method = RequestMethod.GET)
+	public ModelAndView editExtendTemplate(HttpServletRequest request, HttpSession session,
+			@RequestParam long idListColrules, ModelAndView model) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "C", session);
+		if (rbac) {
+
+			List<ListDataSource> getlistdatasourcesname = templateviewdao.getlistdatasourcesname();
+			ListColGlobalRules listDataSource = GlobalRuleDAO.getDataFromListDataSourcesOfIdData(idListColrules);
+
+			ModelAndView modelandview = new ModelAndView("editGlobalRule");
+			modelandview.addObject("getlistdatasourcesname", getlistdatasourcesname);
+			modelandview.addObject("listDataSource", listDataSource);
+			modelandview.addObject("currentSection", "Extend Template & Rule");
+			modelandview.addObject("currentLink", "View Global Rules");
+			return modelandview;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/updateGlobalRule", method = RequestMethod.POST)
+	public void updateExtendTemplateRule(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam String name, @RequestParam long idListColrules, @RequestParam String description,
+			@RequestParam String ruleExpression, @RequestParam String domain)
+
+	{
+
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("idUser=" + idUser);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		ListColGlobalRules lcr = new ListColGlobalRules();
+
+		lcr.setIdListColrules(idListColrules);
+		lcr.setRuleName(name);
+		lcr.setDomain(domain);
+		lcr.setDescription(description);
+		lcr.setExpression(ruleExpression);
+		System.out.println("name " + name);
+		try {
+			GlobalRuleDAO.updateintolistColRules(lcr);
+			try {
+				JSONObject json = new JSONObject();
+				json.put("success", "Global Rule updated successfully");
+				response.getWriter().println(json);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			GlobalRuleDAO.updateintolistColRules(lcr);
+			try {
+				JSONObject json = new JSONObject();
+				json.put("success", "Global Rule updated successfully");
+				response.getWriter().println(json);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping(value = "/userrule", method = RequestMethod.POST)
+	public @ResponseBody MultiValueMap userruleinfo(HttpServletRequest request, HttpServletResponse response,
+			HttpSession session, @RequestParam String singleRowData) {
+		Map<String, String> tempmap = new HashMap<String, String>();
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		MultiValueMap map = new MultiValueMap();
+		System.out.println("data=" + singleRowData);
+
+		String s1 = singleRowData.replaceFirst("\\|\\|", "").substring(1, singleRowData.length() - 3);
+		System.out.println(s1);
+		String[] s2 = s1.trim().split("\\|\\|");
+		System.out.println("s2 length " + s2.length);
+		int i = 0;
+		while (i < s2.length) {
+			int j = 0;
+			String key = s2[i + j];
+			j++;
+			String value = s2[i + j];
+			tempmap.put(key, value);
+			i = i + 2;
+			session.setAttribute("userrule", tempmap);
+		}
+		return map;
+	}
+
+	@RequestMapping(value = "/viewsynonyms")
+	public ModelAndView getListSynonyms(ModelAndView model, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "R", session);
+		if (rbac) {
+
+			List<ruleFields> rulefields = GlobalRuleDAO.getListGlobalRulesSynonyms();
+			for (ruleFields l : rulefields) {
+				System.out.println(l.getRule_id());
+			}
+
+			model.addObject("rulefields", rulefields);
+			model.addObject("currentSection", "Extend Template & Rule");
+			model.addObject("currentLink", "Synonym Library");
+			model.setViewName("synonyms");
+			return model;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/editsynonym", method = RequestMethod.GET)
+	public ModelAndView editsynonyms(HttpServletRequest request, HttpSession session, @RequestParam long rule_id,
+			ModelAndView model) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "C", session);
+		if (rbac) {
+
+			List<ListDataSource> getlistdatasourcesname = templateviewdao.getlistdatasourcesname();
+			ListColGlobalRules listDataSource = GlobalRuleDAO.getDataFromListDataSourcesOfIdData(rule_id);
+
+			ModelAndView modelandview = new ModelAndView("editSynonym");
+			modelandview.addObject("getlistdatasourcesname", getlistdatasourcesname);
+			modelandview.addObject("listDataSource", listDataSource);
+			modelandview.addObject("currentSection", "Extend Template");
+			modelandview.addObject("currentLink", "Edit Rule");
+			return modelandview;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+}

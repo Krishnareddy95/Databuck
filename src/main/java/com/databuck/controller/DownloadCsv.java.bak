@@ -1,0 +1,979 @@
+package com.databuck.controller;
+
+import java.awt.Window;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringJoiner;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.swing.JOptionPane;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.databuck.dao.IResultsDAO;
+import com.databuck.dao.MatchingResultDao;
+import com.databuck.dao.SchemaDAOI;
+import org.springframework.core.env.Environment;
+
+@Controller
+public class DownloadCsv {
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	@Autowired
+	private JdbcTemplate jdbcTemplate1;
+	@Autowired
+	public SchemaDAOI SchemaDAOI;
+	@Autowired
+	public MongoTemplate mongoTemplate;
+	@Autowired
+	private IResultsDAO iResultsDAO;
+	@Autowired
+	MatchingResultDao matchingresultdao;
+
+	@Autowired
+	public Properties appDbConnectionProperties;
+
+	@Autowired
+	public void setJdbcTemplate(JdbcTemplate jdbcTemplate, JdbcTemplate jdbcTemplate1) {
+		this.jdbcTemplate1 = jdbcTemplate1;
+		this.jdbcTemplate = jdbcTemplate;
+	}
+
+	@RequestMapping(value = "/statusBarCsvDownload", method = RequestMethod.POST, produces = "application/json")
+	public void startStatuspoll(HttpServletRequest request, HttpSession session, HttpServletResponse response,
+			@RequestParam String tableName) {
+		System.out.println("tableName=" + tableName);
+		JSONObject json = new JSONObject();
+		try {
+			/*
+			 * double currentCount = (Long) session.getAttribute(tableName +
+			 * "_CurrentCount"); double totalCount = (Long)
+			 * session.getAttribute(tableName + "_TotalCount");
+			 * System.out.println(currentCount + "" + totalCount);
+			 * System.out.println(((currentCount / totalCount) * 100));
+			 */
+			Long percentage = (Long) session.getAttribute(tableName + "_Percentage");
+			System.out.println(percentage);
+			json.put("percentage", session.getAttribute(tableName + "_Percentage"));
+			System.out.println(json);
+			/*
+			 * if(percentage>=100){ session.removeAttribute(tableName +
+			 * "_Percentage"); }
+			 */ response.getWriter().println(json);
+
+		} catch (Exception e) {
+			json.put("percentage", 100);
+			try {
+				response.getWriter().println(json);
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+		}
+
+	}
+
+	@RequestMapping(value = "/downloadCsv")
+	public void doDownload(HttpServletRequest request, HttpServletResponse response) {
+		HttpSession session = request.getSession();
+		String tableName = request.getParameter("tableName");
+
+		// listFilesAndFilesSubDirectories("C:/Arif/First_Eigen/csvFiles/2103",
+		// response, request);
+		
+		System.out.println("In downloadCsv ----------------"+tableName);
+
+		try {
+			Properties prop = new Properties();
+			InputStream is = new FileInputStream(
+					new File(System.getenv("DATABUCK_HOME") + "/propertiesFiles/cluster.properties"));
+			prop.load(is);
+
+			System.out.println("tableName::" + tableName);
+
+			if (prop.getProperty("app_mode").trim().equalsIgnoreCase("1")) {
+				writeMongoToCsv(tableName, request);
+			} else {
+				System.out.println("session.setAttribute(tableName + _Percentage, 100");
+				session.setAttribute(tableName + "_Percentage", 100);
+			}
+			if (tableName.equalsIgnoreCase("dq_dashboard")) {
+				System.out.println("createQualityCsv");
+				iResultsDAO.createQualityCsv();
+			}
+			if (tableName.equalsIgnoreCase("dm_dashboard")) {
+				System.out.println("createMatchingCsv");
+				matchingresultdao.createMatchingCsv();
+			}
+			if (!tableName.trim().equals("")) {
+				
+				
+				String fileFullPath = null;
+				if (tableName.toUpperCase().contains("DATA_QUALITY")) {
+					
+					
+					fileFullPath = System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + ".csv";
+					
+					
+					
+				} else {
+					fileFullPath = System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + ".csv";
+				}
+				// String
+				// fileFullPath="C:\\Users\\appzop6\\Downloads\\"+tableName+".csv";
+				// String fileFullPath="E:\\backup\\Tuesday\\databuck.zip";
+				System.out.println("table for csv+" + tableName);
+				// get absolute path of the application
+				ServletContext context = request.getSession().getServletContext();
+				String appPath = context.getRealPath("");
+				System.out.println("appPath = " + appPath);
+
+				// construct the complete absolute path of the file
+				File downloadFile = new File(fileFullPath);
+				FileInputStream inputStream = new FileInputStream(downloadFile);
+
+				// get MIME type of the file
+				String mimeType = context.getMimeType(fileFullPath);
+				if (mimeType == null) {
+					// set to binary type if MIME mapping not found
+					mimeType = "application/octet-stream";
+				}
+				System.out.println("MIME type: " + mimeType);
+
+				// set content attributes for the response
+				response.setContentType(mimeType);
+				response.setContentLength((int) downloadFile.length());
+
+				// set headers for the response
+				String headerKey = "Content-Disposition";
+				String headerValue = String.format("attachment; filename=\"%s\"", tableName + ".csv");
+				response.setHeader(headerKey, headerValue);
+
+				// get output stream of the response
+				OutputStream outStream = response.getOutputStream();
+
+				byte[] buffer = new byte[1024 * 1000];
+				int bytesRead = -1;
+
+				// write bytes read from the input stream into the output stream
+				while ((bytesRead = inputStream.read(buffer)) != -1) {
+					outStream.write(buffer, 0, bytesRead);
+				}
+
+				inputStream.close();
+				outStream.close();
+			}
+
+		} catch (Exception e) {
+			session.setAttribute(tableName + "_Percentage", 100);
+			System.out.println("Exception");
+			try {
+				PrintWriter pw = null;
+				pw = new PrintWriter(
+						new FileWriter(new File(System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + ".csv")));
+				String sql = "select * from " + tableName;
+				SqlRowSet queryForRowSet = jdbcTemplate1.queryForRowSet(sql);
+				// set count
+				queryForRowSet.last();
+				queryForRowSet.first();
+				SqlRowSetMetaData metaData = queryForRowSet.getMetaData();
+				StringJoiner csvData = new StringJoiner(",");
+				for (int i = 1; i <= metaData.getColumnCount(); i++) {
+					csvData.add(metaData.getColumnName(i));
+				}
+				pw.println(csvData);
+				long j = 0;
+				do {
+					j++;
+					csvData = new StringJoiner(",");
+					for (int i = 1; i <= metaData.getColumnCount(); i++) {
+						csvData.add(queryForRowSet.getString(i));
+					}
+					pw.println(csvData);
+				} while (queryForRowSet.next());
+				pw.flush();
+				pw.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+			}
+			e.printStackTrace();
+			doDownload(request, response);
+		}
+	}
+
+	public void downloadCsvLocal(HttpServletResponse response, HttpServletRequest request, String tableName,
+			String appId, String tableNickName) throws IOException {
+		// String tableName = request.getParameter("tableName");
+		// String appId = request.getParameter("appId");
+		// String appId = "2103";
+		// String tableName = "DATA_QUALITY_2103_Transaction_Detail_All";
+		System.out.println("tableName::::"+tableName);
+		System.out.println("appId::::"+appId);
+	    System.out.println("tableNickName::::"+tableNickName);
+		System.out.println("downloadCsvLocal ........");
+		
+		
+		String folderName = "";
+		try {
+			SqlRowSet tableDateAndRun = iResultsDAO.getTableMaxDateAndRun(appId);
+			
+			System.out.println("downloadCsvLocal ........ tableDateAndRun => "+tableDateAndRun);
+
+			if (tableDateAndRun.next()) {
+				
+			
+				
+				String date = tableDateAndRun.getString("Date");
+				int run = tableDateAndRun.getInt("Run");
+				folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/" + appId + "/" + date + "/" + run + "/"
+						+ tableNickName;
+				
+				//folderName = "C://Priyanka/dataProfiling/AB_ms41.csv_Row_Profile.csv";
+				
+				System.out.println("downloadCsvLocal ........ folderName =>"+folderName);
+
+			}
+
+		} catch (Exception E) {
+			E.printStackTrace();
+		}
+
+		// downloadFunction(folderName, response, request);
+
+		File directory = new File(folderName);
+		// get all the files from a directory
+		File[] fList = directory.listFiles();
+		
+		System.out.println("downloadCsvLocal ........ fList =>"+fList);
+	//	String temp = fList.getName();
+		if(fList != null){
+			for (File file : fList) {
+				if (file.isFile()) {
+					System.out.println(file.getName());
+					String fileName = file.getName();
+					if (fileName.endsWith(".csv")) {
+						try {
+	
+							String fileFullPath = folderName + "/" + fileName;
+							System.out.println("downloadCsvLocal ........ table for csv+" + fileName);
+							// get absolute path of the application
+							ServletContext context = request.getSession().getServletContext();
+							String appPath = context.getRealPath("");
+							System.out.println("downloadCsvLocal ........ appPath = " + appPath);
+	
+							// construct the complete absolute path of the file
+							File downloadFile = new File(fileFullPath);
+							FileInputStream inputStream = new FileInputStream(downloadFile);
+	
+							// get MIME type of the file
+							String mimeType = context.getMimeType(fileFullPath);
+							if (mimeType == null) {
+								// set to binary type if MIME mapping not found
+								mimeType = "application/octet-stream";
+							}
+							System.out.println("MIME type: " + mimeType);
+							System.out.println("downloadFile.length() =>"+downloadFile.length());
+							
+							// set content attributes for the response
+							response.setContentType(mimeType);
+							response.setContentLength((int) downloadFile.length());
+	
+							// set headers for the response
+							String headerKey = "Content-Disposition";
+	
+							String headerValue = String.format("attachment; filename=\"%s\"", tableNickName + ".csv");
+							response.setHeader(headerKey, headerValue);
+	
+							// get output stream of the response
+							OutputStream outStream = response.getOutputStream();
+	
+							byte[] buffer = new byte[1024 * 1000];
+							int bytesRead = -1;
+	
+							// write bytes read from the input stream into the
+							// output stream
+							while ((bytesRead = inputStream.read(buffer)) != -1) {
+								outStream.write(buffer, 0, bytesRead);
+							}
+	
+							inputStream.close();
+							outStream.close();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+	
+					}
+	
+				}
+			}
+		}else {
+			System.out.println("fList =>null");
+			HttpSession session = request.getSession();
+			session.setAttribute("errormsg", "CSV is not available");
+		
+			////AKSHAY///4.9.2019//////
+			JSONObject json = new JSONObject();
+			//json.put("fail",   " Date file is not available for Current Run !!!!!!!");
+		   String message = "'"+ tableNickName +"' Data file is not available for Current Run !!";
+		   json.put("fail",  message);
+			/*"font": {
+	            "fontSize": 14,
+	            "fontName": "Avenir-BlackOblique"
+	        }*/
+			
+			response.getWriter().println(json);
+			
+			// csv write..
+			
+		}
+}
+
+	// download CSV From S3
+
+	@RequestMapping(value = "/downloadCsvS3")
+	public void downloadCsvS3(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String tableName = request.getParameter("tableName");
+		System.out.println(tableName);
+		String idApp = request.getParameter("idApp");
+		String tableNickName = request.getParameter("tableNickName");
+		
+		
+		if (appDbConnectionProperties.getProperty("deploymentMode").equals("s3")) {
+			HttpSession session = request.getSession();
+			boolean fileNotFound = true;
+
+			// String tableNickName = "NullData";
+			// String appId = "2067";
+			// String tableName = "DATA_QUALITY_2103_Transaction_Detail_All";
+			System.out.println("download CSV from S3");
+			try {
+				System.out.println("downloadCsvS3 try ......");
+
+				String s3CsvPath = appDbConnectionProperties.getProperty("s3CsvPath");
+				AWSCredentials credentials = new BasicAWSCredentials(
+						appDbConnectionProperties.getProperty("s3.aws.accessKey"),
+						appDbConnectionProperties.getProperty("s3.aws.secretKey"));
+
+				AmazonS3 s3client = new AmazonS3Client(credentials);
+
+				System.out.println("downloadCsvS3 tableName::" + tableName);
+
+				if (tableName.equalsIgnoreCase("dq_dashboard")) {
+					System.out.println("downloadCsvS3 createQualityCsv.............");
+					iResultsDAO.createQualityCsv();
+				}
+				if (tableName.equalsIgnoreCase("dm_dashboard")) {
+					System.out.println("downloadCsvS3 createMatchingCsv ............");
+					matchingresultdao.createMatchingCsv();
+				}
+				if (!tableName.trim().equals("")) {
+					try {
+						String folderName = "";
+						SqlRowSet tableDateAndRun = iResultsDAO.getTableMaxDateAndRun(idApp);
+						if (tableDateAndRun.next()) {
+							String date = tableDateAndRun.getString("Date");
+							int run = tableDateAndRun.getInt("Run");
+							folderName = "csvFiles/" + idApp + "/" + date + "/" + run + "/" + tableNickName;
+
+						}
+						System.out.println("folderName:" + folderName);
+						System.out.println("s3CsvPath:" + s3CsvPath);
+
+						// Get files list in the folder
+						List<String> getObjectslistFromFolder = getObjectslistFromFolder(s3CsvPath.split("//")[1],
+								folderName);
+						Iterator<String> iterator = getObjectslistFromFolder.iterator();
+
+						while (iterator.hasNext()) {
+							String list = iterator.next();
+							if (list.endsWith(".csv")) {
+								folderName = list;
+							}
+						}
+
+						System.out.println("File full path:"+folderName);
+						S3Object s3object = s3client
+								.getObject(new GetObjectRequest(s3CsvPath.split("//")[1], folderName));
+
+						System.out.println("downloadCsvS3 s3object getContentType()......"
+								+ s3object.getObjectMetadata().getContentType());
+
+						System.out.println("downloadCsvS3 s3object getContentLength()......"
+								+ s3object.getObjectMetadata().getContentLength());
+						BufferedReader reader = new BufferedReader(new InputStreamReader(s3object.getObjectContent()));
+
+						// set headers for the response
+						String headerKey = "Content-Disposition";
+						String headerValue = String.format("attachment; filename=\"%s\"", tableNickName + ".csv");
+						response.setHeader(headerKey, headerValue);
+
+						// get output stream of the response
+						OutputStream outStream = response.getOutputStream();
+						String line;
+
+						while ((line = reader.readLine()) != null) {
+							outStream.write(line.getBytes());
+							outStream.write("\n".getBytes());
+						}
+						fileNotFound = false;
+
+					} catch (Exception e) {
+						System.out.println("Failed to Download ["+tableNickName+"] file not found !!");
+						e.printStackTrace();
+					}
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (fileNotFound) {
+				String message = "'" + tableNickName + "' Data file is not available for Current Run !!";
+				session.setAttribute("errormsg", message);
+				JSONObject json = new JSONObject();
+				json.put("fail", message);
+				response.getWriter().println(json);
+			}
+		} else {
+			/*String tableName = request.getParameter("tableName");
+		String idApp = request.getParameter("idApp");
+		String tableNickName = request.getParameter("tableNickName");*/
+			downloadCsvLocal(response, request, tableName, idApp, tableNickName);
+		}
+	}
+
+	// ------------------
+
+	public List<String> getObjectslistFromFolder(String bucketName, String folderKey) {
+		System.out.println("\n====> Getting Object list from folder ....");
+		System.out.println("\n====> BucketName:"+bucketName);
+		System.out.println("\n====> folderKey:"+folderKey);
+		
+		String s3CsvPath = appDbConnectionProperties.getProperty("s3CsvPath");
+		AWSCredentials credentials = new BasicAWSCredentials(appDbConnectionProperties.getProperty("s3.aws.accessKey"),
+				appDbConnectionProperties.getProperty("s3.aws.secretKey"));
+
+		AmazonS3 s3client = new AmazonS3Client(credentials);
+
+		ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(bucketName)
+				.withPrefix(folderKey + "/");
+
+		List<String> keys = new ArrayList<>();
+
+		ObjectListing objects = s3client.listObjects(listObjectsRequest);
+		for (;;) {
+			List<S3ObjectSummary> summaries = objects.getObjectSummaries();
+			if (summaries.size() < 1) {
+				break;
+			}
+			summaries.forEach(s -> keys.add(s.getKey()));
+			objects = s3client.listNextBatchOfObjects(objects);
+		}
+
+		return keys;
+	}
+
+	@RequestMapping(value = "/downloadDefaultCsv")
+	public void doDownloadDefault(HttpServletRequest request, HttpServletResponse response) {
+		HttpSession session = request.getSession();
+		String tableName = request.getParameter("tableName");
+		try {
+			Properties prop = new Properties();
+			InputStream is = new FileInputStream(
+					new File(System.getenv("DATABUCK_HOME") + "/propertiesFiles/cluster.properties"));
+			prop.load(is);
+
+			System.out.println("tableName::" + tableName);
+
+			if (prop.getProperty("app_mode").trim().equalsIgnoreCase("1")) {
+				writeMongoToCsv(tableName, request);
+			} else {
+				System.out.println("session.setAttribute(tableName + _Percentage, 100");
+				session.setAttribute(tableName + "_Percentage", 100);
+			}
+			if (tableName.equalsIgnoreCase("dq_dashboard")) {
+				System.out.println("createQualityCsv");
+				iResultsDAO.createQualityCsv();
+			}
+			if (tableName.equalsIgnoreCase("dm_dashboard")) {
+				System.out.println("createMatchingCsv");
+				matchingresultdao.createMatchingCsv();
+			}
+			if (!tableName.trim().equals("")) {
+				String fileFullPath = null;
+				if (tableName.toUpperCase().contains("DATA_QUALITY")) {
+					fileFullPath = System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + "_Default.csv";
+				} else {
+					fileFullPath = System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + "_Default.csv";
+				}
+				// String
+				// fileFullPath="C:\\Users\\appzop6\\Downloads\\"+tableName+".csv";
+				// String fileFullPath="E:\\backup\\Tuesday\\databuck.zip";
+				System.out.println("table for csv+" + tableName);
+				// get absolute path of the application
+				ServletContext context = request.getSession().getServletContext();
+				String appPath = context.getRealPath("");
+				System.out.println("appPath = " + appPath);
+
+				// construct the complete absolute path of the file
+				File downloadFile = new File(fileFullPath);
+				FileInputStream inputStream = new FileInputStream(downloadFile);
+
+				// get MIME type of the file
+				String mimeType = context.getMimeType(fileFullPath);
+				if (mimeType == null) {
+					// set to binary type if MIME mapping not found
+					mimeType = "application/octet-stream";
+				}
+				System.out.println("MIME type: " + mimeType);
+
+				// set content attributes for the response
+				response.setContentType(mimeType);
+				response.setContentLength((int) downloadFile.length());
+
+				// set headers for the response
+				String headerKey = "Content-Disposition";
+				String headerValue = String.format("attachment; filename=\"%s\"", tableName + "_Default.csv");
+				response.setHeader(headerKey, headerValue);
+
+				// get output stream of the response
+				OutputStream outStream = response.getOutputStream();
+
+				byte[] buffer = new byte[1024 * 1000];
+				int bytesRead = -1;
+
+				// write bytes read from the input stream into the output stream
+				while ((bytesRead = inputStream.read(buffer)) != -1) {
+					outStream.write(buffer, 0, bytesRead);
+				}
+
+				inputStream.close();
+				outStream.close();
+			}
+
+		} catch (Exception e) {
+			session.setAttribute(tableName + "_Percentage", 100);
+			System.out.println("Exception");
+			try {
+				PrintWriter pw = null;
+				pw = new PrintWriter(new FileWriter(
+						new File(System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + "_Default.csv")));
+				String sql = "select Date, Run, ColName as 'Default ColNames', Default_Value, Default_Count, Default_Percentage from "
+						+ tableName;
+
+				SqlRowSet queryForRowSet = jdbcTemplate1.queryForRowSet(sql);
+				// set count
+				queryForRowSet.last();
+				queryForRowSet.first();
+				SqlRowSetMetaData metaData = queryForRowSet.getMetaData();
+				StringJoiner csvData = new StringJoiner(",");
+				for (int i = 1; i <= metaData.getColumnCount(); i++) {
+					csvData.add(metaData.getColumnName(i));
+				}
+				pw.println(csvData);
+				long j = 0;
+				do {
+					j++;
+					csvData = new StringJoiner(",");
+					for (int i = 1; i <= metaData.getColumnCount(); i++) {
+						csvData.add(queryForRowSet.getString(i));
+					}
+					pw.println(csvData);
+				} while (queryForRowSet.next());
+				pw.flush();
+				pw.close();
+			} catch (Exception e2) {
+				// TODO: handle exception
+			}
+			e.printStackTrace();
+			doDownloadDefault(request, response);
+		}
+	}
+
+	private void writeMongoToCsv(String tableName, HttpServletRequest request) {
+		try {
+			HttpSession session = request.getSession();
+			Process process = null;
+			try {
+				Properties prop = new Properties();
+				InputStream is = new FileInputStream(
+						new File(System.getenv("DATABUCK_HOME") + "/propertiesFiles/mongodb.properties"));
+				prop.load(is);
+				String database = prop.getProperty("databaseName");
+				String ipAddress = prop.getProperty("ipAddress");
+				String port = prop.getProperty("port");
+
+				System.out.println("writing from mongo db");
+
+				List<String> getallColumns = iResultsDAO.getallColumns(tableName);
+
+				String allColumns = StringUtils.collectionToCommaDelimitedString(getallColumns);
+
+				String command = "mongoexport --db " + database + "  --host " + ipAddress + " --port " + port
+						+ "  --type=csv --collection " + tableName + " --fields " + allColumns + "  --out  "
+						+ System.getenv("DATABUCK_HOME") + "/csvFiles/" + tableName + ".csv";
+
+				System.out.println(command);
+				process = Runtime.getRuntime().exec(command);
+
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+
+			BufferedReader reader = null;
+			if (process != null) {
+				reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+			}
+			String line = "";
+			long percentage = -1;
+			try {
+				while ((line = reader.readLine()) != null) {
+					System.out.println(line + "\n");
+					if (line.contains("exported")) {
+						session.setAttribute(tableName + "_Percentage", 100);
+					} else {
+						int first = line.indexOf("(");
+						int last = line.indexOf(")");
+						try {
+							if (first != -1 && last != -1) {
+								percentage = Math.round(Double.parseDouble(line.substring(first + 1, last - 1)));
+								System.out.println("percentage:" + percentage);
+								session.setAttribute(tableName + "_Percentage", percentage);
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+
+				}
+			} catch (IOException e2) {
+				e2.printStackTrace();
+			}
+			try {
+				process.waitFor();
+			} catch (InterruptedException e3) {
+				e3.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//-------------------------------- For Profiling --------------------------
+	
+
+	@RequestMapping(value = "/profilingDownloadCsvS3")
+	public void profilingDownloadCsvS3(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String tableName = request.getParameter("tableName");
+		System.out.println(tableName);
+		String idApp = request.getParameter("idApp");
+		String tableNickName = request.getParameter("tableNickName");
+		
+		
+		if (appDbConnectionProperties.getProperty("deploymentMode").equals("s3")) {
+			HttpSession session = request.getSession();
+			boolean fileNotFound = true;
+
+			System.out.println("download CSV from S3");
+			try {
+				System.out.println("downloadCsvS3 try ......");
+
+				String s3CsvPath = appDbConnectionProperties.getProperty("s3CsvPath");
+				AWSCredentials credentials = new BasicAWSCredentials(
+						appDbConnectionProperties.getProperty("s3.aws.accessKey"),
+						appDbConnectionProperties.getProperty("s3.aws.secretKey"));
+
+				AmazonS3 s3client = new AmazonS3Client(credentials);
+
+				System.out.println("downloadCsvS3 tableName::" + tableName);
+				
+				
+
+			
+				if (!tableName.trim().equals("")) {
+					try {
+						//	folderName = "csvFiles/" + idApp + "/" + date + "/" + run + "/" + tableNickName;
+							//csvFiles/profile/" + appId + "/Row_Profile/"
+						
+						String folderName = "";
+
+						if (tableNickName.contains("RowProfile")) {
+
+							System.out.println("In If RowProfile..............");
+
+							folderName = "csvFiles/Profile/" + idApp + "/Row_Profile";
+
+							System.out.println("Path RowProfile ->" + folderName);
+						} else if (tableNickName.contains("NumericalProfile")) {
+							System.out.println("In If NumericalProfile..............");
+
+							folderName = "csvFiles/Profile/" + idApp + "/Numerical_Profile_Detail";
+
+							System.out.println("Path Numerical_Profile ->" + folderName);
+						} else if (tableNickName.equals("ColumnProfile")) {
+							System.out.println("In If ColumnProfile..............");
+
+							folderName = "csvFiles/Profile/" + idApp + "/Column_Profile";
+
+							System.out.println("Path ColumnProfile ->" + folderName);
+						} else if (tableNickName.equals("ColumnProfileDetail")) {
+							System.out.println("In If ColumnProfileDetail..............");
+
+							folderName = "csvFiles/Profile/" + idApp + "/Column_Profile_Detail";
+
+							System.out.println("Path ColumnProfileDetail ->" + folderName);
+						} else {
+							System.out.println("In If Column_Combination..............");
+
+							folderName = "csvFiles/Profile/" + idApp + "/Column_Combination_Detail";
+
+							System.out.println("Path Column_Combination ->" + folderName);
+						}
+						
+						
+						System.out.println("folderName:" + folderName);
+						System.out.println("s3CsvPath:" + s3CsvPath);
+
+						// Get files list in the folder
+						List<String> getObjectslistFromFolder = getObjectslistFromFolder(s3CsvPath.split("//")[1],
+								folderName);
+						Iterator<String> iterator = getObjectslistFromFolder.iterator();
+
+						while (iterator.hasNext()) {
+							String list = iterator.next();
+							if (list.endsWith(".csv")) {
+								folderName = list;
+							}
+						}
+
+						System.out.println("File full path:"+folderName);
+						
+						S3Object s3object = s3client
+								.getObject(new GetObjectRequest(s3CsvPath.split("//")[1], folderName));
+
+						System.out.println("downloadCsvS3 s3object getContentType()......"
+								+ s3object.getObjectMetadata().getContentType());
+
+						System.out.println("downloadCsvS3 s3object getContentLength()......"
+								+ s3object.getObjectMetadata().getContentLength());
+
+						
+						 BufferedReader reader = new BufferedReader(new InputStreamReader(s3object.getObjectContent()));
+						    String line;
+						    System.out.println("======== S3 File Reading ============");
+						    int iteration = 0;
+						    
+						 // set headers for the response
+							String headerKey = "Content-Disposition";
+							String headerValue = String.format("attachment; filename=\"%s\"", tableNickName + ".csv");
+							response.setHeader(headerKey, headerValue);
+
+							// get output stream of the response
+							OutputStream outStream = response.getOutputStream();
+
+							while ((line = reader.readLine()) != null) {
+								outStream.write(line.getBytes());
+								outStream.write("\n".getBytes());
+							}
+							fileNotFound = false;
+
+
+					} catch (Exception e) {
+						System.out.println("Failed to Download ["+tableNickName+"] file not found !!");
+						e.printStackTrace();
+					}
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (fileNotFound) {
+				String message = "'" + tableNickName + "' Data file is not available for Current Run !!";
+				session.setAttribute("errormsg", message);
+				JSONObject json = new JSONObject();
+				json.put("fail", message);
+				response.getWriter().println(json);
+			}
+		} else {
+			/*String tableName = request.getParameter("tableName");
+		String idApp = request.getParameter("idApp");
+		String tableNickName = request.getParameter("tableNickName");*/
+			profilingDownloadCsvLocal(response, request, tableName, idApp, tableNickName);
+		}
+	}
+	public void profilingDownloadCsvLocal(HttpServletResponse response, HttpServletRequest request, String tableName,
+			String appId, String tableNickName) throws IOException {
+		
+		System.out.println("tableName::::" + tableName);
+		System.out.println("appId::::" + appId);
+		System.out.println("tableNickName::::" + tableNickName);
+		System.out.println("profilingDownloadCsvLocal ........");
+
+		
+
+		String folderName = "";
+
+		if (tableNickName.contains("RowProfile")) {
+
+			System.out.println("In If RowProfile..............");
+
+			folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/Profile/" + appId + "/Row_Profile/";
+
+			System.out.println("Path RowProfile ->" + folderName);
+		} else if (tableNickName.contains("NumericalProfile")) {
+			System.out.println("In If NumericalProfile..............");
+
+			folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/Profile/" + appId + "/Numerical_Profile_Detail/";
+
+			System.out.println("Path Numerical_Profile ->" + folderName);
+		} else if (tableNickName.equals("ColumnProfile")) {
+			System.out.println("In If ColumnProfile..............");
+
+			folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/Profile/" + appId + "/Column_Profile/";
+
+			System.out.println("Path ColumnProfile ->" + folderName);
+		} else if (tableNickName.equals("ColumnProfileDetail")) {
+			System.out.println("In If ColumnProfileDetail..............");
+
+			folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/Profile/" + appId + "/Column_Profile_Detail/";
+
+			System.out.println("Path ColumnProfileDetail ->" + folderName);
+		} else {
+			System.out.println("In If Column_Combination..............");
+
+			folderName = System.getenv("DATABUCK_HOME") + "/csvFiles/Profile/" + appId + "/Column_Combination_Detail/";
+
+			System.out.println("Path Column_Combination ->" + folderName);
+		}
+
+		// downloadFunction(folderName, response, request);
+
+		File directory = new File(folderName);
+		// get all the files from a directory
+		File[] fList = directory.listFiles();
+
+		System.out.println("downloadCsvLocal ........ fList =>" + fList);
+		// String temp = fList.getName();
+		if (fList != null) {
+			for (File file : fList) {
+				if (file.isFile()) {
+					System.out.println(file.getName());
+					String fileName = file.getName();
+					if (fileName.endsWith(".csv")) {
+						try {
+
+							String fileFullPath = folderName + "/" + fileName;
+							System.out.println("downloadCsvLocal ........ table for csv+" + fileName);
+							// get absolute path of the application
+							ServletContext context = request.getSession().getServletContext();
+							String appPath = context.getRealPath("");
+							System.out.println("downloadCsvLocal ........ appPath = " + appPath);
+
+							// construct the complete absolute path of the file
+							File downloadFile = new File(fileFullPath);
+							FileInputStream inputStream = new FileInputStream(downloadFile);
+
+							// get MIME type of the file
+							String mimeType = context.getMimeType(fileFullPath);
+							if (mimeType == null) {
+								// set to binary type if MIME mapping not found
+								mimeType = "application/octet-stream";
+							}
+							System.out.println("MIME type: " + mimeType);
+							System.out.println("downloadFile.length() =>" + downloadFile.length());
+
+							// set content attributes for the response
+							response.setContentType(mimeType);
+							response.setContentLength((int) downloadFile.length());
+
+							// set headers for the response
+							String headerKey = "Content-Disposition";
+
+							String headerValue = String.format("attachment; filename=\"%s\"", tableNickName + ".csv");
+							response.setHeader(headerKey, headerValue);
+
+							// get output stream of the response
+							OutputStream outStream = response.getOutputStream();
+
+							byte[] buffer = new byte[1024 * 1000];
+							int bytesRead = -1;
+
+							// write bytes read from the input stream into the
+							// output stream
+							while ((bytesRead = inputStream.read(buffer)) != -1) {
+								outStream.write(buffer, 0, bytesRead);
+							}
+
+							inputStream.close();
+							outStream.close();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+					}
+
+				}
+			}
+		} else {
+			System.out.println("fList =>null");
+			HttpSession session = request.getSession();
+			session.setAttribute("errormsg", "CSV is not available");
+
+			//// AKSHAY///4.9.2019//////
+			JSONObject json = new JSONObject();
+			// json.put("fail", " Date file is not available for Current Run !!!!!!!");
+			String message = "'" + tableNickName + "' Data file is not available for Current Run !!";
+			json.put("fail", message);
+			/*
+			 * "font": { "fontSize": 14, "fontName": "Avenir-BlackOblique" }
+			 */
+
+			response.getWriter().println(json);
+
+			// csv write..
+
+		}
+	}
+}

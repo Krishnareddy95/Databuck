@@ -1,0 +1,1647 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<jsp:include page="header.jsp" />
+<jsp:include page="container.jsp" />
+<script>
+	var request;
+	var vals = "";
+	function sendInfo() {
+		var v = document.getElementById("datasetid").value;
+		//var v=document.vinform.Database.value;  
+		var url = "./duplicatedatatemplatename?val=" + v;
+		//alert("in ajax code");
+		if (window.XMLHttpRequest) {
+			request = new XMLHttpRequest();
+		} else if (window.ActiveXObject) {
+			request = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+
+		try {
+			request.onreadystatechange = getInfo;
+			request.open("POST", url, true);
+			request.send();
+		} catch (e) {
+			//alert("Unable to connect to server");
+		}
+	}
+
+	function getInfo() {
+		if (request.readyState == 4) {
+			var val = request.responseText;
+			//alert("getInfo");
+			//alert(val);
+			//var sal="Database already exists";
+			//console.log(val);
+			document.getElementById('amit').innerHTML = val;
+			if (val != "") {
+				vals = val;
+				//alert("please enter another name");
+				return false;
+			}
+			//alert("check123");
+		}
+	}
+</script>
+
+<!-- BEGIN CONTENT -->
+<div class="page-content-wrapper">
+	<!-- BEGIN CONTENT BODY -->
+	<div class="page-content">
+		<!-- BEGIN PAGE TITLE-->
+		<!-- END PAGE TITLE-->
+		<!-- END PAGE HEADER-->
+		<div class="row">
+			<div class="col-md-6" style="width: 100%;">
+				<!-- BEGIN SAMPLE FORM PORTLET-->
+				<div class="portlet light bordered init">
+					<div class="portlet-title">
+					 <%--  <% 
+                        String message=(String)request.getAttribute("message");
+                        System.out.print("message="+message);
+                        if(message!=null){
+                        %>
+                   <div class="alert alert-success" style="width:50%; float:right">
+   <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+ <strong>${message}</strong>
+</div>
+<%} %> --%>
+						<div class="caption font-red-sunglo">
+							<span class="caption-subject bold "> Create Data Template
+							</span>
+						</div>
+<div id="loading-progress" class="ajax-loader hidden">
+                         <h4><b>Table List Loading in progress..</b></h4>
+                            <img src="${pageContext.request.contextPath}/assets/global/img/loading-circle.gif"  class="img-responsive" />
+                        </div>
+                        <div id="loading-data-progress" class="ajax-loader hidden">
+                         <h4><b>Table Data Loading in progress..</b></h4>
+                            <img src="${pageContext.request.contextPath}/assets/global/img/loading-circle.gif"  class="img-responsive" />
+                        </div>
+
+					</div>
+					<div class="portlet-body form">
+						<input type="hidden" id="tourl" value="createForm" />
+						<input type="hidden" id="currSelectedTable" value="" />
+						<input type="hidden" id="queryInputTaken" value="" />
+						
+						<form action="createForm" enctype="multipart/form-data" method="POST" accept-charset="utf-8">
+							<div class="form-body">
+								<div class="row" id="template_data">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="datasetid" name="dataset"
+												placeholder="Enter the Data Template Name"
+												onkeyup="sendInfo()"> <label for="form_control_1">Data
+												Template Name *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<span id="amit" class="help-block required"></span>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="descriptionid"
+												name="description" placeholder="Enter your description">
+											<label for="form_control">Description</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<select class="form-control" id="locationid" name="location"
+												placeholder="Choose Location">
+												<option value="-1">Select...</option>
+												<option value="File System">File System</option>
+												<option value="File Management">File Management</option>
+												<option value="HDFS">HDFS</option>
+												<option value="MSSQL">MS SQL</option>
+												<option value="MSSQLActiveDirectory">MS SQL(Active Directory)</option>
+												<option value="Vertica">Vertica</option>
+												<option value="Oracle">Oracle (Standalone)</option>
+												<option value="Hive">Hive</option>
+												<option value="Kafka">Kafka</option>
+												<option value="Cassandra">Cassandra</option>
+												<option value="Postgres">Postgres</option>
+												<option value="Teradata">Teradata</option>
+												<option value="Amazon Redshift">Amazon Redshift</option>
+												<option value="Hive Kerberos">Hive Kerberos</option>
+												<option value="Oracle RAC">Oracle (RAC)</option>
+												<option value="S3">S3</option>
+												<option value="MapR FS">MapR FS</option>
+												<option value="MapR DB">MapR DB</option>
+											</select> <label for="form_control_1">Data Location *</label>
+											<!-- <span class="help-block">Data Location  </span> -->
+
+
+
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+									<div class="col-md-6 col-capture hidden" id="sourcedivid">
+										<div class="form-group form-md-line-input">
+											<!-- <input type="text" class="form-control" id="sourceid" name="source" placeholder="Enter Data Template"> -->
+											<select class="form-control" id="sourceid" name="source"
+												placeholder="Choose Location">
+												<option value="PSV">PSV(Pipe Delimited)</option>
+												<option value="CSV">CSV</option>
+												<option value="TSV">TSV</option>
+												<option value="ORC">ORC</option>
+												<option value="Parquet">Parquet</option>
+												<option value="JSON">JSON</option>
+												<!-- New options needs to be added here -->
+												<!-- This would be a sample json code which would uploaded to the application for schema -->
+												<!-- <option value="xls">XLS</option> -->
+											</select> <label for="form_control_1">Data Format</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+								</div>
+								<!-- <div id="hide-file" style="display:none;">
+                                        <div class="row" id="csv_id" id="uploaddivid">
+                                            <div class="col-md-6 col-capture">
+                                                <div class="form-group form-md-line-input">
+                                                     <input type="file" class="form-control" name="upload" id="upload_id" /> 
+                                                    <label for="form_control">Metadata File</label>
+                                                </div><br/>
+                                            </div>
+                                            <div class="col-md-6 col-capture" id="s3typeid">
+                                                <div class="form-group form-md-line-input">
+                                                    <input type="text" class="form-control" id="sourceid" name="source" placeholder="Enter Data Template">
+                                                    <select class="form-control" id="s3typevalueid" name="s3type" placeholder="Choose Location">
+                                                      <option value="DataBuck S3 Bucket">DataBuck S3 Bucket</option>
+                                                      <option value="Your S3 Bucket">Your S3 Bucket</option>
+                                                    </select>
+                                                    <label for="form_control_1">Choose Bucket Type</label>
+                                                    <span class="help-block">Short text about Data Set</span>
+                                                </div>
+                                            </div>
+                                        </div> -->
+								<div class="row">
+									<div class="col-md-6 col-capture hidden" id="uploaddivid">
+										<div class="form-group form-md-line-input">
+											<input type="file" class="form-control" name="dataupload"
+												id="dataupload_id" /> <label for="form_control"
+												id="fileType">Data Source File</label>
+										</div>
+										<br />
+									</div>
+									<div class="col-md-6 col-capture hidden" id="maprdivid">
+                                        <div class="form-group form-md-line-input">
+                                            <select class="form-control" id="mapRDBSourceFormat" name="mapRDBSourceFormat">
+                                                <option value="JSON">JSON</option>
+                                                <!-- <option value="Binary">Binary</option> -->
+                                            </select> <label for="mapRDBSourceFormat">MapR DB Format</label>
+                                        </div>
+                                    </div>
+								</div>
+
+								<div class="form-body hidden" id="checkid">
+									<!-- <div class="form-body"  id="hdfs_form_id"> -->
+									<div class="row">
+										<div class="col-md-6 col-capture" id="host-id-container">
+											<div class="form-group form-md-line-input">
+
+												<input type="checkbox" checked class="md-check"
+													id="headerId" name="headerId" value="Y"> <label
+													for="form_control_1" id="host-id">File has Header?*</label>
+												<!--  <span class="help-block">Data Set Name </span> -->
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+										<div class="col-md-6 col-capture">
+											<div class="form-group form-md-line-input">
+												<input type="text" class="form-control catch-error"
+													id="rowsId" name="rowsId"> <label
+													for="form_control_1" id="rows-id">Number of rows
+													to be ignored </label>
+												<!--  <span class="help-block">Data Set Name </span> -->
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+									</div>
+								</div>
+
+
+								<div class="form-body" style="display: none;" id="s4_form_id">
+									<div class="row">
+										<div class="col-md-6 col-capture" id="host-id-container">
+											<div class="form-group form-md-line-input">
+												<select class="form-control" id="schemaId" name="schemaId1">
+												</select> <label for="form_control_1">Select Data Connection
+													*</label>
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+										 <div class="col-md-6 col-capture hidden" id="s4_tablename_id">
+                                            <div class="form-group form-md-line-input">                                                                                             
+                                                <select class="form-control multiselect text-left" style="text-align:left;" id="lstTable" multiple="multiple">                                                                                                
+                                                </select>
+                                                <input type="hidden" id="selectedTables" name="selectedTables" value=""/>
+                                                <label for="form_control_1" id="host-id">Table Name*</label>                                            
+ 
+ 
+ 
+ 
+ 
+                                                <!--  <span class="help-block">Data Set Name </span> -->
+                                            </div>
+                                            <br /> <span class="required"></span>
+                                        </div>
+                                    <div class="col-md-6 col-capture hidden" id="s4_tablename_id_2">
+                                            <div class="form-group form-md-line-input">
+                                                <input type="text" class="form-control catch-error"
+                                                    id="tableNameid" name="tableNameid"> <label
+                                                    for="form_control_1" id="folder-id">Table Name*</label>
+                                                <!--  <span class="help-block">Data Set Name </span> -->
+                                            </div>
+                                            <br /> <span class="required"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-capture" id="conditionid">   
+                                            <div class="col-md-6 col-capture" id="whereconditionid">
+                                            <div class="form-group form-md-line-input">
+                                                <input type="text" class="form-control catch-error"
+                                                    id="whereId" name="whereId"> <label for="whereId"
+                                                    id="whereId">Where Condition</label>
+                                                <!--  <span class="help-block">Data Set Name </span> -->
+                                            </div>
+                                            <br /> <span class="required"></span>
+                                        </div>
+										<div class="col-md-6 col-capture" id="queryid1">
+											<div class="form-group form-md-checkboxes">
+												<div class="md-checkbox-list">
+													<div class="md-checkbox">
+														<input type="checkbox" class="md-check"
+															id="querycheckboxid" name="querycheckboxid" value="Y">
+														<label for="querycheckboxid"><span></span> <span
+															class="check"></span> <span class="box"></span>Query?</label>
+													</div>
+												</div>
+											</div>
+										</div>
+										<!-- <div class="col-md-6 col-capture" id="whereconditionid">
+											<div class="form-group form-md-line-input">
+												<input type="text" class="form-control catch-error"
+													id="whereId" name="whereId"> <label for="whereId"
+													id="whereId">Where Condition</label>
+												 <span class="help-block">Data Set Name </span>
+											</div>
+											<br /> <span class="required"></span>
+										</div> -->
+									</div>
+									<div class="row">
+										<div class="col-md-12 col-capture hidden"
+											id="querytextboxiddiv">
+											<div class="form-group form-md-line-input">
+												<input type="text" class="form-control catch-error"
+													id="querytextboxid" name="querytextboxid"> <label
+													for="form_control_1" id="querytextboxid">Query</label>
+												<!--  <span class="help-block">Data Set Name </span> -->
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+									</div>
+									</div></div>
+									<div class="row" id="incremental_div">
+										<div class="col-md-6 col-capture">
+											<div class="form-group form-md-checkboxes">
+												<div class="md-checkbox-list">
+													<div class="md-checkbox">
+														<input type="checkbox" class="md-check"
+															id="incrementalsourceid" name="incrementalsourceid"
+															value="Y"> <label for="incrementalsourceid"><span></span>
+															<span class="check"></span> <span class="box"></span>Incremental Matching
+															Source</label>
+													</div>
+												</div>
+											</div>
+										</div>
+										
+									
+										
+										
+										<div class="hidden" id="incrementaltype">
+											<div class="col-md-6 col-capture" id="host-id-container">
+												<div class="form-group form-md-line-input">
+													<input type="text" class="form-control catch-error"
+														id="dateformatid" name="dateformatid"> <label
+														for="dateformatid" >Date Format</label>
+													<!--  <span class="help-block">Data Set Name </span> -->
+												</div>
+												<br /> <span class="required"></span>
+											</div>
+										
+
+										<div class="col-md-6 col-capture" id="host-id-container">
+											<div class="form-group form-md-line-input">
+												<input type="number" class="form-control catch-error"
+													id="slicestartid" name="slicestartid"
+													 max="-1" > <label
+													for="slicestartid" >Slice Start</label>
+												<!--  <span class="help-block">Data Set Name </span> -->
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+										<div class="col-md-6 col-capture" id="host-id-container">
+											<div class="form-group form-md-line-input">
+												<input type="number" class="form-control catch-error"
+													id="sliceendid" name="sliceendid" max="-1"> <label
+													for="sliceendid" id="whereId" >Slice End</label>
+												<!--  <span class="help-block">Data Set Name </span> -->
+											</div>
+											<br /> <span class="required"></span>
+										</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+							<div class="form-body hidden" id="s3_form_id">
+								<!-- <div class="form-body"  id="hdfs_form_id"> -->
+								<div class="row">
+									<div class="col-md-6 col-capture" id="host-id-container">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="hostName" name="hostName"> <label
+												for="form_control_1" id="host-id1">Host URI*</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="schemaName" name="schemaName"> <label
+												for="form_control_1" id="folder-id1">Folder *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="userName"
+												name="userName"> <label for="form_control"
+												id="user-id">User login*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="password" class="form-control catch-error"
+												id="pwd" name="pwd"> <label for="form_control_1"
+												id="user-pwd">Password *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+								</div>
+								<div id="hide-table" style="display: none;">
+									<div class="row">
+										<div class="col-md-6 col-capture" id="vschema_table">
+											<div class="form-group form-md-line-input">
+												<input type="text" class="form-control" id="folderName"
+													name="folderName"> <label for="form_control"
+													id="table-name">Table Name *</label>
+												<!-- <span class="help-block">Short text about Data Set</span> -->
+											</div>
+											<br />
+										</div>
+										<div id="hide-port" style="display: none">
+											<div class="col-md-6 col-capture">
+												<div class="form-group form-md-line-input">
+													<input type="text" class="form-control" id="portName"
+														name="portName"> <label for="form_control">Port
+														*</label>
+													<!-- <span class="help-block">Short text about Data Set</span> -->
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+
+							</div>
+
+
+							<div class="form-body hidden" id="kafka_form_id">
+								<!-- <div class="form-body"  id="hdfs_form_id"> -->
+								<div class="row">
+									<div class="col-md-6 col-capture" id="host-id-container">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="src_brokerUri" name="src_brokerUri"> <label
+												for="form_control_1" id="host-id1">Host URI*</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="src_topicName" name="src_topicName"> <label
+												for="form_control_1" id="folder-id1">Folder *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+								</div>
+								<div class="row">
+								
+									<div class="col-md-6 col-capture" id="host-id-container">
+									
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="tar_brokerUri" name="tar_brokerUri"> <label
+												for="form_control_1" id="host-id1">Broker URI*</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="tar_topicName" name="tar_topicName"> <label
+												for="form_control_1" id="folder-id1">Topic Name *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+								</div>
+								
+								<div class="row" id="usercred_div">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="userName"
+												name="userName"> <label for="form_control"
+												id="user-id">User login*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="password" class="form-control catch-error"
+												id="pwd" name="pwd"> <label for="form_control_1"
+												id="user-pwd">Password *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+								</div>
+								<div id="hide-table" style="display: none;">
+								
+									<div class="row">
+										<div class="col-md-6 col-capture" id="vschema_table">
+											<div class="form-group form-md-line-input">
+												<input type="text" class="form-control" id="folderName"
+													name="folderName"> <label for="form_control"
+													id="table-name">Table Name *</label>
+												<!-- <span class="help-block">Short text about Data Set</span> -->
+											</div>
+											<br />
+										</div>
+										<div id="hide-port" style="display: none">
+											<div class="col-md-6 col-capture">
+												<div class="form-group form-md-line-input">
+													<input type="text" class="form-control" id="portName"
+														name="portName"> <label for="form_control">Port
+														*</label>
+													<!-- <span class="help-block">Short text about Data Set</span> -->
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+
+							</div>
+
+
+							<div class="form-body" style="display: none" id="mqsql_form_id">
+							<div class="panel-heading">Source</div>
+								<div class="row">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control catch-error"
+												id="hostid" name="host"> <label for="form_control_1">Host
+												Name *</label>
+											<!--  <span class="help-block">Data Set Name </span> -->
+										</div>
+										<br /> <span class="required"></span>
+									</div>
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="portid"
+												name="port"> <label for="form_control">Port
+												*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+								</div>
+								
+								<div class="panel-heading">Target</div>
+								<div class="row"> 
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="userid"
+												name="username"> <label for="form_control">Username
+												*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="password" class="form-control" id="pwdid"
+												name="password"> <label for="form_control">Password
+												*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-6 col-capture">
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="dbid"
+												name="dbname"> <label for="form_control">Database
+												Name *</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+										<span class="required"></span>
+
+										<div class="form-group form-md-line-input">
+											<input type="text" class="form-control" id="tableid"
+												name="tablename"> <label for="form_control">Table
+												Name*</label>
+											<!-- <span class="help-block">Short text about Data Set</span> -->
+										</div>
+									</div>
+
+								</div>
+								<br /> <br />
+								<div class="row">
+									<div class="note note-danger hidden"></div>
+								</div>
+							</div>
+							<div class="form-actions noborder align-center">
+								<button type="submit" id="datasetupid" onclick="submitFormDataAndCreateTemplate()" class="btn blue">Submit</button>
+							</div>							
+						</form>
+
+					</div>
+				</div>
+				<div class="note note-info hidden">File uploaded Successfully</div>
+				<!-- END SAMPLE FORM PORTLET-->
+			</div>
+		</div>
+	</div>
+</div>
+<div class="cd-popup" id="popSample" role="alert">
+    <div class="cd-popup-container">
+        <p>Should sample analysis data be displayed after selecting the table?</p>
+        <ul class="cd-buttons">
+        <li><a id="popYes" >Yes</a></li>
+        <li><a  id="popNo" >No</a></li>
+        </ul>                         
+    </div>
+</div>
+<div class="cd-popup1"  id="datapop" >
+    <div class="cd-popup-container1" id="outerContainer1">
+        <div style="height: 93%;" >
+            <div class="tabbable tabbable-custom boxless tabbable-reversed">
+                <ul class="nav nav-tabs"
+                    style="border-bottom: 1px solid #ddd;">
+                
+                    <li id="lstAnalysis" class="active" style="width: 14%"><a
+                        href="javascript:void(0);" onclick="viewDataPopup('Analysis');"
+                        style="padding: 2px 2px;"> <strong>Data
+                                Analysis</strong>
+                    </a></li>
+                    <li id="lstTemplate" style="width: 14%"><a href="javascript:void(0);" onclick="viewDataPopup('Template');"
+                        style="padding: 2px 2px;"> <strong>Data Template</strong>
+                    </a></li>
+                </ul>
+            </div>    
+            <div id="datapop3" style="max-height: 500px;">            
+                <div class="hidden" id="datapopTemplate" style="max-height: 480px; overflow-x: auto;overflow-y: scroll;">           
+                </div>
+            </div>
+            <div id="datapop1" style="max-height: 500px;">
+                <div id="datapop4" style="height: 40%;max-height: 220px;overflow-y: auto;">      
+                    <div style="width: 15%; float:left; vertical-align: center; ">              
+                        <div class="page-sidebar navbar-collapse collapse" style="width: 100%;">  
+                            <ul class="page-sidebar-menu  page-header-fixed "
+                            data-keep-expanded="false" data-auto-scroll="true"
+                            data-slide-speed="200" style="padding-top: 20px">
+                                <li class="nav-item"><a href="javascript:void(0);" onclick="appendDataToPopup('Numerical');">Numerical Data Analysis</a></li>
+                                <li class="nav-item"><a href="javascript:void(0);" onclick="appendDataToPopup('String & Character');">String Data Analysis</a></li>
+                                <li class="nav-item"><a href="javascript:void(0);" onclick="appendDataToPopup('Date');">Date Data Analysis</a></li>
+                            </ul>
+                        </div>
+                    </div>                    
+                    <div style="width: 85%; overflow-x: auto;float:right" id="datapop2">          
+                    </div>
+                </div>
+                <div id="chartDiv" style="height: 60%;max-height: 280px;width: 100%;overflow-x: scroll; overflow-y: scroll; "
+                                class="dashboard-summary-chart-2">     
+                </div>            
+            </div>
+        </div>            
+        <div style="height: 7%;  bottom: 0;vertical-align: bottom;" >          
+           <button type="submit" id="popClose" class="btn blue">Close</button>
+           <button type="submit" id="btnTemplate" onclick="viewDataPopup('Template');" class="btn blue">Analyse and Save Template</button>
+         </div>   
+    </div>
+</div>
+<!-- END QUICK SIDEBAR -->
+<!-- END CONTAINER -->
+<jsp:include page="footer.jsp" />
+<head>
+ <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+<script type="text/javascript">
+    $(document).ready(function() {
+        //$('#lstTable').multiselect();
+        $('#lstTable').multiselect({
+        	 maxHeight: 200,        	
+        	 buttonWidth: '500px',        	 
+        	 includeSelectAllOption: true,
+        	 enableFiltering: true,        	 
+        	 nonSelectedText: 'Select Table'
+        });       
+    });
+</script>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+	google.load("visualization", "1", {packages:["corechart"]});
+	//google.setOnLoadCallback(drawChart);
+
+	var firstSelect=false;
+	var datafirstSelect=false;
+	var areTableDetailsDisplayed=false;
+	$('#querycheckboxid').click(function() {
+		if ($(this).prop("checked") == true) {
+			$('#querytextboxiddiv').removeClass('hidden');
+			$('#whereconditionid').addClass('hidden');
+		} else if ($(this).prop("checked") == false) {
+			$('#querytextboxiddiv').addClass('hidden');
+			$('#whereconditionid').removeClass('hidden');
+			
+		}
+	});
+	var selectedOption;
+	var analysisData;
+	$(document).on("click", "#sample_editable1 tr td", function(){
+	//$("#sample_editable1 tr td").live('click', function(event){
+		$(".input-hide").addClass("hidden");
+		$("label").removeClass("hidden");
+		//console.log("-----------");	
+		//console.log($(this).find("input").val());
+		$(this).find(".input-hide").removeClass("hidden");
+		$(this).find("label").addClass("hidden");
+		var indexRow = $(this).closest("tr").data("attr");
+		var indexCol = $(this).data("attr");
+	});
+
+	  $('.input-hide').bind('focus', function(e) {
+	            $(this).data('done', false);
+	  });	        
+	 
+		$('#lstTable').on('change',	
+			function() {
+	 		//var tableName = $(this).val();
+	 		var currentSelection;	 		
+		    
+		      var currentValues = $(this).val();
+		      if(currentValues.length == 1){
+		    	  currentSelection = currentValues;		      	
+		      }else{
+		    	  currentSelection = currentValues.filter(function(el) {
+			        	return selectedOption.indexOf(el) < 0;
+			      });
+		      }
+		    
+		    	    	
+		    selectedOption = $(this).val();
+		    var tablelen = $(this).val().length;
+	 		console.log(currentSelection);
+	 		
+	 		if(currentSelection.length > 0){	
+	 			var isQuery = "N";
+	 			displayTable(currentSelection, isQuery);
+				if(!firstSelect){	        	
+			    	 event.preventDefault();
+					 $('#popSample').addClass('is-visible');
+					 $('#popSample').on('click', function(event){
+							if( $(event.target).is('#popYes')) {
+								areTableDetailsDisplayed = true;								
+							}else if( $(event.target).is('#popNo') ) {
+								areTableDetailsDisplayed = false;								
+							}
+							event.preventDefault();
+							firstSelect = true;
+							$(this).removeClass('is-visible');
+							displayTable(currentSelection, isQuery);
+						});					 
+			    	}
+		     }
+	 		
+			 if( tablelen == 1){
+				 $('#conditionid').removeClass('hidden');
+			 }else{
+				 $('#conditionid').addClass('hidden');
+			 }     
+	       
+	});	
+ 
+ function displayTable(selTableName, isQuery){
+	
+	 $("#currSelectedTable").val(selTableName); 
+ 	
+	 if(firstSelect)
+     {
+	        if (areTableDetailsDisplayed){	        
+	        	var form_data = {
+	        			idDataSchema : $("#schemaId").val(),
+	        			dataLocation: $("#locationid").val(),
+						tableName: selTableName[0],
+						queryString: $("#querytextboxid").val(),
+						isQuery: isQuery
+				};
+	        	$.ajax({
+	        		type : 'GET',	        		
+	        		url : "./populateTableAnalysisData",
+	        		beforeSend: function(){
+					   $('#loading-data-progress').removeClass('hidden').show();						
+					},
+	        		data : form_data,
+	        		success : function(obj) {
+	        			event.preventDefault();       				
+	        			analysisData = obj;
+	        			//appendDataToPopup("Numerical");
+	        			viewDataPopup('Analysis');
+	        			$('#datapop').on('click', function(event){
+	        				if( $(event.target).is('#popClose')) {
+	        					event.preventDefault();	 
+	        					$('#datapop2').html("");
+	        					$('#datapopTemplate').html("");	        					
+								$(this).removeClass('is-visible');
+								$('.box').show();
+	        				}
+	        				
+					   });
+	      		},
+					complete: function(){
+						$('#loading-data-progress').addClass('hidden');
+					 },
+					error: function(xhr, textStatus, errorThrown) {
+						//alert("Problem populating analysis data");
+					}
+	        	});
+	        	//$('popupTable').removeClass('is-visible');
+	        }else{
+	        		        
+	        }
+     }
+ }
+ 
+ function viewDataPopup(key){
+	 if(key == 'Analysis'){		 
+		 $("#btnTemplate").html('Analyse and Save Template');
+		 $('#datapop1').removeClass('hidden');
+		 $('#datapopTemplate').addClass('hidden');
+		 appendDataToPopup("Numerical");
+		 $('#lstTemplate').removeClass('active');
+		 $('#lstAnalysis').addClass('active');
+		 viewChart('Numerical', '');
+	 }else{			 
+		  $('#chartDiv').addClass('hidden');	
+		 if($("#btnTemplate").text() == 'Save Template'){			
+			 $('#datapop1').removeClass('is-visible');
+			 $('#outerContainer1').removeClass('is-visible');	 	
+			 $('#datapop').removeClass('is-visible');					
+		 }else{		 
+			 $("#btnTemplate").html('Save Template');
+			 $('#datapop1').addClass('hidden');
+			 appendDataToPopup("dataDefinition");		 
+			 $('#datapopTemplate').removeClass('hidden');
+			 $('#lstTemplate').addClass('active');
+			 $('#lstAnalysis').removeClass('active');
+		 }
+	 }
+ } 
+ 
+	
+ function appendDataToPopup(key){		
+		var response = analysisData[key];		
+		var c = [];
+		if(key == 'Numerical'){
+			c.push("<h3 class=\"caption-subject bold\">"+key +" Data Analysis</h3>");
+			c.push("<table id=\"numAnalysisDataTable\" class=\"table table-striped table-bordered table-advance table-hover datatable-master\">");
+			c.push("<thead><tr><th>Attribute</th><th>Sample Data</th><th>Min</th><th>Max</th><th>Average</th><th>Median</th><th>%Null Values</th><th>%Unique Values</th><th>Data Distribution</th></tr></thead>");
+			if(response != ""){
+				var elements = jQuery.parseJSON(response);		
+				$.each(elements, function(i, item) {             
+			        c.push("<tr><td>" + item.key + "</td>");
+			        c.push("<td>"+ item.sampleData + "</td>");		       
+			        c.push("<td>" + item.min + "</td>");
+			        c.push("<td>" + item.max + "</td>"); 
+			        c.push("<td>" + item.average + "</td>");
+			        c.push("<td>" + item.median + "</td>");
+			        c.push("<td>" + item.nullValues + "</td>"); 
+			        c.push("<td>" + item.percentOfUniqueValues + "</td>");			        
+			        c.push("<td><a class=\"dashboard-summary-2\" href=\"javascript:void(0);\" onclick=\"viewChart('Numerical','"+item.key+"');\"> <i class=\"fa fa-line-chart\">Chart</i></a></td></tr>");
+			     });
+			}
+			c.push("</table>");			
+			$('#datapop2').html(c.join(""));			
+			viewChart('Numerical', '');
+		}else if(key == 'String & Character'){
+			c.push("<h3 class=\"caption-subject bold\">"+key +" Data Analysis</h3>");
+			c.push("<table id=\"strAnalysisDataTable\" class=\"table table-striped table-bordered table-advance table-hover datatable-master\">");
+			c.push("<thead><tr><th>Attribute</th><th>Sample Data</th><th>Number Of Unique Values</th><th>Minimum Length</th><th>Maximum Length</th><th>%Null Values</th><th>Data Distribution</th></tr></thead>");
+			if(response != ""){
+				var elements = jQuery.parseJSON(response);		
+				$.each(elements, function(i, item) {             
+			        c.push("<tr><td>" + item.key + "</td>");
+			        c.push("<td>"+ item.sampleData + "</td>");
+			        c.push("<td>" + item.numberOfUniqueValues + "</td>");
+			        c.push("<td>" + item.minLength + "</td>"); 
+			        c.push("<td>" + item.maxLength + "</td>");
+			        c.push("<td>" + item.percentOfNullValues + "</td>");
+			        c.push("<td><a class=\"dashboard-summary-2\" href=\"javascript:void(0);\" onclick=\"viewChart('String & Character','"+item.key+"');\"> <i class=\"fa fa-line-chart\">Chart</i></a></td></tr>");
+			     });
+			}
+			c.push("</table>");
+			$('#datapop2').html(c.join(""));
+			viewChart('String & Character', '');
+		}else if(key == 'Date'){
+			c.push("<h3 class=\"caption-subject bold\">"+key +" Data Analysis</h3>");
+			c.push("<table id=\"dtAnalysisDataTable\" class=\"table table-striped table-bordered table-advance table-hover datatable-master\">");
+			c.push("<thead><tr><th>Attribute</th><th>Sample Data</th><th>Minimum Date</th><th>Maximum Date</th><th>%Null Values</th><th>Data Distribution</th></tr></thead>");
+			if(response != ""){
+				var elements = jQuery.parseJSON(response);		
+				$.each(elements, function(i, item) {             
+			        c.push("<tr><td>" + item.key + "</td>");
+			        c.push("<td>"+ item.sampleData + "</td>");
+			        c.push("<td>" + item.minDate + "</td>");
+			        c.push("<td>" + item.maxDate + "</td>"); 
+			        c.push("<td>" + item.percentOfNullValues + "</td>");	
+			        c.push("<td><a class=\"dashboard-summary-2\" href=\"javascript:void(0);\" onclick=\"viewChart('Date','"+item.key+"');\"> <i class=\"fa fa-line-chart\">Chart</i></a></td></tr>");
+			     });
+			}
+			c.push("</table>");
+			$('#datapop2').html(c.join(""));
+			viewChart('Date', '');
+		}else{
+			c.push("<h3 class=\"caption-subject bold\">Data Template</h3>");
+			c.push("<table class=\"table table-striped table-bordered table-advance table-hover datatable-master\" cellspacing=\"0\" width=\"100%\" id=\"sample_editable1\">");
+			c.push("<thead><tr><th>Column Name</th>");
+			c.push("<th>Format</th>");
+			c.push("<th>primaryKey</th>");
+			c.push("<th>Subsegment</th>");
+			c.push("<th>Last Read Time</th>");
+			c.push("<th>Do not display</th>");
+			c.push("<th>Partition Key</th>");
+			c.push("<th>Null Check<br></th>");
+			c.push("<th>Duplicate Key<br></th>");
+			c.push("<th>Numerical Fingerprint</th>");
+			c.push("<th>Text Fingerprint<br></th>");
+			c.push("<th>Data Drift</th>");
+			c.push("<th>Record Anomaly</th>");
+			c.push("<th>Start Date</th>");
+			c.push("<th>End Date</th>");
+			c.push("<th>Timeliness Check</th>");
+			c.push("<th>Default Check</th>");
+			c.push("<th>Date Rule</th>");
+			c.push("<th>Pattern Check</th>");
+			c.push("<th>Patterns</th>");
+			c.push("<th>BadData Check</th>");//sumeet
+			
+			//changes regarding length check & length value
+			c.push("<th>Length Check </th>");
+			c.push("<th>Length Value </th>");
+			
+			c.push("<th>NullCheck Threshold</th>");
+			c.push("<th>NumFingerprint Threshold</th>");
+			c.push("<th>StrtingFingerprint Threshold</th>");
+			c.push("<th>DataDrift Threshold</th>");
+			c.push("<th>RecordAnomaly Threshold</th>");
+			c.push("<th>Match Value</th>");
+			c.push("</tr></thead>");
+			c.push("<tbody id=\"listdatadefinitiontable\">");
+			
+			var elements = jQuery.parseJSON(response);		
+			$.each(elements, function(i, item) { 				            
+		        c.push("<span style=\"display: none\" class=\"source-item-id\">"+item.idColumn+"</span>");
+		        c.push("<tr class=\"source-item\" data-attr=\""+item.idColumn+"\">");
+		        c.push("<td class=\"source-displayName\" data-attr=\"displayName\">");
+		        c.push("<label id=\"displayName_"+item.idColumn+"_label\">"+item.displayName+"</label>");
+		        c.push("<input id=\"displayName_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.displayName+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-format\" data-attr=\"format\">");
+		        c.push("<label id=\"format_"+item.idColumn+"_label\">"+ item.format+"</label>");
+		        c.push("<input id=\"format_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.format+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-primaryKey\" data-attr=\"primaryKey\">");
+		        c.push("<label id=\"primaryKey_"+item.idColumn+"_label\">"+ item.primaryKey+"</label>");
+		        c.push("<input id=\"primaryKey_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.primaryKey+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-dgroup\" data-attr=\"dgroup\">");
+		        c.push("<label id=\"dgroup_"+item.idColumn+"_label\">"+ item.dgroup+"</label>");
+		        c.push("<input id=\"dgroup_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.dgroup+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-incrementalCol\" data-attr=\"incrementalCol\">");
+		        c.push("<label id=\"incrementalCol_"+item.idColumn+"_label\">"+ item.incrementalCol+"</label>");
+		        c.push("<input id=\"incrementalCol_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.incrementalCol+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-isMasked\" data-attr=\"isMasked\">");
+		        c.push("<label id=\"isMasked_"+item.idColumn+"_label\">"+ item.isMasked+"</label>");
+		        c.push("<input id=\"isMasked_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.isMasked+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-partitionBy\" data-attr=\"partitionBy\">");
+		        c.push("<label id=\"partitionBy_"+item.idColumn+"_label\">"+ item.partitionBy+"</label>");
+		        c.push("<input id=\"partitionBy_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.partitionBy+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-nonNull\" data-attr=\"nonNull\">");
+		        c.push("<label id=\"nonNull_"+item.idColumn+"_label\">"+ item.nonNull+"</label>");
+		        c.push("<input id=\"nonNull_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.nonNull+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-dupkey\" data-attr=\"dupkey\">");
+		        c.push("<label id=\"dupkey_"+item.idColumn+"_label\">"+ item.dupkey+"</label>");
+		        c.push("<input id=\"dupkey_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.dupkey+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-numericalStat\" data-attr=\"numericalStat\">");
+		        c.push("<label id=\"numericalStat_"+item.idColumn+"_label\">"+ item.numericalStat+"</label>");
+		        c.push("<input id=\"numericalStat_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.numericalStat+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-stringStat\" data-attr=\"stringStat\">");
+		        c.push("<label id=\"stringStat_"+item.idColumn+"_label\">"+ item.stringStat+"</label>");
+		        c.push("<input id=\"stringStat_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.stringStat+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-dataDrift\" data-attr=\"dataDrift\">");
+		        c.push("<label id=\"dataDrift_"+item.idColumn+"_label\">"+ item.dataDrift+"</label>");
+		        c.push("<input id=\"dataDrift_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.dataDrift+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-recordAnomaly\" data-attr=\"recordAnomaly\">");
+		        c.push("<label id=\"recordAnomaly_"+item.idColumn+"_label\">"+ item.recordAnomaly+"</label>");
+		        c.push("<input id=\"recordAnomaly_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.recordAnomaly+"\"/>");
+		        c.push("</td>");
+		        
+		        c.push("<td class=\"source-startDate\" data-attr=\"startDate\">");
+		        c.push("<label id=\"startDate_"+item.idColumn+"_label\"> N </label>");
+		        c.push("<input id=\"startDate_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-endDate\" data-attr=\"endDate\">");
+		        c.push("<label id=\"endDate_"+item.idColumn+"_label\"> N </label>");
+		        c.push("<input id=\"endDate_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-timelinessCheck\" data-attr=\"timelinessCheck\">");
+		        c.push("<label id=\"timelinessCheck_"+item.idColumn+"_label\"> N </label>");
+		        c.push("<input id=\"timelinessCheck_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-defaultCheck\" data-attr=\"defaultCheck\">");
+		        c.push("<label id=\"defaultCheck_"+item.idColumn+"_label\"> N </label>");
+		        c.push("<input id=\"defaultCheck_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-dateRule\" data-attr=\"dateRule\">");
+		        c.push("<label id=\"dateRule_"+item.idColumn+"_label\"> N </label>");
+		        c.push("<input id=\"dateRule_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        
+		        c.push("<td class=\"source-patternCheck\" data-attr=\"patternCheck\">");
+		        c.push("<label id=\"patternCheck_"+item.idColumn+"_label\">"+ item.patternCheck +"</label>");
+		        c.push("<input id=\"patternCheck_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-patterns\" data-attr=\"patterns\">");
+		        c.push("<label id=\"patterns_"+item.idColumn+"_label\">" + item.patterns + "</label>");
+		        c.push("<input id=\"patterns_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\"  \"/>");
+		        c.push("</td>");
+		        
+		        //sumeet
+		        c.push("<td class=\"source-badData\" data-attr=\"badData\">");
+		        c.push("<label id=\"badData_"+item.idColumn+"_label\">"+ item.badData +"</label>");
+		        c.push("<input id=\"badData_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\" N \"/>");
+		        c.push("</td>");
+		        
+		        // changes for length check & length value
+		        c.push("<td class=\"source-lengthCheck\" data-attr=\"lengthCheck\">");
+		        c.push("<label id=\"lengthCheck_"+item.idColumn+"_label\">" + item.lengthCheck + "</label>");
+		        c.push("<input id=\"lengthCheck_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\"  \"/>");
+		        c.push("</td>");
+		        
+		        // length Value change 4dec2019 
+		        c.push("<td class=\"source-lengthValue\" data-attr=\"lengthValue\">");
+		        c.push("<label id=\"lengthValue_"+item.idColumn+"_label\">" + item.lengthValue + "</label>");
+		        c.push("<input id=\"lengthValue_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\"  \"/>");
+		        c.push("</td>");
+		        
+		        //---------------------
+		        
+		        c.push("<td class=\"source-nullCountThreshold\" data-attr=\"nullCountThreshold\">");
+		        c.push("<label id=\"nullCountThreshold_"+item.idColumn+"_label\">"+ item.nullCountThreshold+"</label>");
+		        c.push("<input id=\"nullCountThreshold_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.nullCountThreshold+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-numericalThreshold\" data-attr=\"numericalThreshold\">");
+		        c.push("<label id=\"numericalThreshold_"+item.idColumn+"_label\">"+ item.numericalThreshold+"</label>");
+		        c.push("<input id=\"numericalThreshold_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.numericalThreshold+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-stringStatThreshold\" data-attr=\"stringStatThreshold\">");
+		        c.push("<label id=\"stringStatThreshold_"+item.idColumn+"_label\">"+ item.stringStatThreshold+"</label>");
+		        c.push("<input id=\"stringStatThreshold_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.stringStatThreshold+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-dataDriftThreshold\" data-attr=\"dataDriftThreshold\">");
+		        c.push("<label id=\"dataDriftThreshold_"+item.idColumn+"_label\">"+ item.dataDriftThreshold+"</label>");
+		        c.push("<input id=\"dataDriftThreshold_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.dataDriftThreshold+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-recordAnomalyThreshold\" data-attr=\"recordAnomalyThreshold\">");
+		        c.push("<label id=\"recordAnomalyThreshold_"+item.idColumn+"_label\">"+ item.recordAnomalyThreshold+"</label>");
+		        c.push("<input id=\"recordAnomalyThreshold_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.recordAnomalyThreshold+"\"/>");
+		        c.push("</td>");
+		        c.push("<td class=\"source-measurement\" data-attr=\"measurement\">");
+		        c.push("<label id=\"measurement_"+item.idColumn+"_label\">"+ item.measurement+"</label>");
+		        c.push("<input id=\"measurement_"+item.idColumn+"_text\" type=\"text\" class=\"hidden input-hide\" value=\""+item.measurement+"\"/>");
+		        c.push("</td>");
+		        
+		        
+		        c.push("</tr>");	
+			});
+			c.push("</tbody>");
+			c.push("</table>");
+			$('#datapopTemplate').html(c.join(""));
+			//attachKeyPressEvent();
+			 //function attachKeyPressEvent() {
+		     $(".input-hide").bind('blur keypress',function(e) { 
+		    	 console.log(e.type);
+		          if (/* e.type == 'blur' ||  */e.keyCode == '13')  {
+		        	  //if (!$(this).data('done')) {
+		                //  $(this).data('done', true);
+		        	  var indexRow = $(this).closest("tr").data("attr");
+					  var indexCol = $(this).closest("td").data("attr");
+					  var columnValue=$("#" + indexCol +"_" + indexRow +"_text").val();
+					  $("#" + indexCol +"_" + indexRow +"_label").html(columnValue);
+						 var form_data = {
+									idColumn : indexRow,
+					                columnName : indexCol,
+					                columnValue: columnValue,
+					                tableName:$("#currSelectedTable").val() 
+					            };
+						 console.log(form_data);
+						  $.ajax({
+				                url: "./saveDataDefinitionData",
+				                type: 'POST',
+				                datatype: 'json',
+				                data: form_data,				                
+				                success: function(message) {               	
+				                	
+				                    var j_obj = $.parseJSON(message);
+				                    if (j_obj.hasOwnProperty('success')) {
+				                    	$("#" + indexCol +"_" + indexRow +"_label").html(j_obj.columnValue);
+				                        toastr.info(j_obj.success);
+				                            setTimeout(function(){
+				                        },1000); 
+				                    } else {
+				                        if (j_obj.hasOwnProperty('fail')) {
+				                            toastr.info(j_obj.fail);
+				                        }
+				                    }
+				                },
+				                error: function(xhr, textStatus, errorThrown) 
+				                {
+				                }
+				            }); 
+							
+		        	  $("#sample_editable1 tr td").find(".input-hide").addClass("hidden");
+		              $("#sample_editable1 tr td").find("label").removeClass("hidden");   
+		          }
+		       // }
+		  });
+	  //}
+			
+		}
+		
+	 	$('#datapop1').addClass('is-visible');
+	 	$('#outerContainer1').addClass('is-visible');	
+	 	$('.box').hide();
+	 	$('#datapop').addClass('is-visible');
+		
+		event.preventDefault(); 
+		return false;
+ }
+	$('#incrementalsourceid').click(function() {
+		if ($(this).prop("checked") == true) {
+			$('#incrementaltype').removeClass('hidden');
+		} else if ($(this).prop("checked") == false) {
+			$('#incrementaltype').addClass('hidden');
+		}
+		
+	});
+
+	
+function submitFormDataAndCreateTemplate() {
+			var no_error = 1;
+			console.log("selected table:"+$("#currSelectedTable").val());
+			if($("#currSelectedTable").val().length > 0){
+				$("#queryInputTaken").val("yes");
+			}
+			if($("#currSelectedTable").val().length == 0 && $("#querytextboxid").val().length > 0 && 
+					$("#queryInputTaken").val().length == 0){
+				event.preventDefault();
+				var isQuery = "Y";
+				var currentSelection = $("#querytextboxid").val();
+				 $('#popSample').addClass('is-visible');
+				 $('#popSample').on('click', function(event){
+						if( $(event.target).is('#popYes')) {
+							areTableDetailsDisplayed = true;										
+						}else if( $(event.target).is('#popNo') ) {
+							areTableDetailsDisplayed = false;										
+						}
+						event.preventDefault();
+						firstSelect = true;
+						$(this).removeClass('is-visible');
+						$("#queryInputTaken").val("yes");
+						displayTable(currentSelection, isQuery);
+				});					 
+		    }
+			else if($("#queryInputTaken").val().length > 0){
+					if( $('#lstTable :selected').length > 0){
+                           //build an array of selected values
+                           var selectednumbers = [];
+                           $('#lstTable :selected').each(function(i, selected) {
+                               selectednumbers[i] = $(selected).val();
+                           });
+                          
+                           $("#selectedTables").val(JSON.stringify(selectednumbers));                                
+                      }
+						$('.input_error').remove();
+						if ($("#datasetid").val().length == 0) {
+							console.log('datasetid');
+							$(
+									'<span class="input_error" style="font-size:12px;color:red">Please Enter Data Template Name</span>')
+									.insertAfter($('#datasetid'));
+							no_error = 0;
+						}
+						if ($("#locationid").val() == -1) {
+							console.log('locationid');
+							$(
+									'<span class="input_error" style="font-size:12px;color:red">Please Choose Data Location</span>')
+									.insertAfter($('#locationid'));
+							no_error = 0;
+						}
+						
+						//What is locationId here and why this is being used
+						if (($('#locationid').val() == 'MSSQLActiveDirectory')
+								|| ($('#locationid').val() == 'Vertica')
+								|| ($('#locationid').val() == 'Oracle')
+								|| ($('#locationid').val() == 'MSSQL')
+								|| ($('#locationid').val() == 'Hive')
+								|| ($('#locationid').val() == 0)) {
+							console.log('locationid');
+
+							if ($("#schemaId").val().length == 0) {
+								console.log('schemaId');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please Select One</span>')
+										.insertAfter($('#schemaId'));
+								no_error = 0;
+							}
+							if(($('#locationid').val() == 'Hive')||($('#locationid').val() == 'Oracle RAC')||($('#locationid').val() == 'Oracle')||($('#locationid').val() == 'Vertica')||($('#locationid').val() == 'MSSQL')||($('#locationid').val() == 'MSSQLActiveDirectory')||($('#locationid').val() == 'Amazon Redshift')($('#locationid').val() == 'Cassandra')){
+                                if ($("#selectedTables").val().length == 0) {                             
+                                    console.log('selectedTables');
+                                    $(
+                                            '<span class="input_error" style="font-size:12px;color:red">Please Select Tables</span>')
+                                            .insertAfter($('#selectedTables'));
+                                    no_error = 0;
+                                }
+                            }else{
+                                if ($("#tableNameid").val().length == 0) {                                
+                                console.log('tableNameid');
+                                $(
+                                        '<span class="input_error" style="font-size:12px;color:red">Please enter Table Name</span>')
+                                        .insertAfter($('#tableNameid'));
+                                no_error = 0;
+                                }
+                            }
+							if ($("#incrementalsourceid").prop("checked") == true) {
+								if ($("#dateformatid").val().length == 0) {
+									$('<span class="input_error" style="font-size:12px;color:red">Please Enter DateFormat</span>')
+											.insertAfter($('#dateformatid'));
+									no_error = 0;
+								}
+								if ($("#slicestartid").val().length == 0) {
+									$('<span class="input_error" style="font-size:12px;color:red">Please Enter Slice Start value</span>')
+											.insertAfter($('#slicestartid'));
+									no_error = 0;
+								}
+								if ($("#sliceendid").val().length == 0) {
+									$('<span class="input_error" style="font-size:12px;color:red">Please Enter Slice End value</span>')
+											.insertAfter($('#sliceendid'));
+									no_error = 0;
+								}
+								var slicestartid=$("#slicestartid").val();
+								var sliceendid=$("#sliceendid").val();
+								
+								if(slicestartid>0){
+									$('<span class="input_error" style="font-size:12px;color:red">Please Enter Negative value</span>')
+									.insertAfter($('#slicestartid'));
+							no_error = 0;
+								}
+								if(sliceendid>0){
+									$('<span class="input_error" style="font-size:12px;color:red">Please Enter Negative value</span>')
+									.insertAfter($('#sliceendid'));
+							no_error = 0;
+								}
+								console.log(slicestartid+""+sliceendid);
+								if(parseInt(slicestartid)>=parseInt(sliceendid)){
+									toastr.info('The Slice Start cannot be Greater than Slice End value');
+							no_error = 0;
+								}
+							}
+							
+						}
+
+						if (($('#locationid').val() == 'File System')
+								|| ($('#locationid').val() == 'HDFS')
+								|| ($('#locationid').val() == 'File Management')) {
+
+							if ($("#dataupload_id").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please Upload a File</span>')
+										.insertAfter($('#dataupload_id'));
+								no_error = 0;
+							}
+							/* if ($("#datasetid").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Dataset Name</span>')
+										.insertAfter($('#datasetid'));
+								no_error = 0;
+							} */
+							if ($("#hostName").val().length == 0) {
+								console.log('hostName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Host Name</span>')
+										.insertAfter($('#hostName'));
+								no_error = 0;
+							}
+							if ($("#schemaName").val().length == 0) {
+								console.log('schemaName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter schemaName</span>')
+										.insertAfter($('#schemaName'));
+								no_error = 0;
+							}
+							if ($("#userName").val().length == 0) {
+								console.log('userName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Username</span>')
+										.insertAfter($('#userName'));
+								no_error = 0;
+							}
+							if ($("#pwd").val().length == 0) {
+								console.log('pwd');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Password</span>')
+										.insertAfter($('#pwd'));
+								no_error = 0;
+							}
+						}else if(($('#locationid').val() == 'S3')){
+							if ($("#dataupload_id").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please Upload a File</span>')
+										.insertAfter($('#dataupload_id'));
+								no_error = 0;
+							}
+							/* if ($("#datasetid").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Dataset Name</span>')
+										.insertAfter($('#datasetid'));
+								no_error = 0;
+							} */
+							if ($("#hostName").val().length == 0) {
+								console.log('hostName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Bucket Name</span>')
+										.insertAfter($('#hostName'));
+								no_error = 0;
+							}
+							if ($("#schemaName").val().length == 0) {
+								console.log('schemaName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Key</span>')
+										.insertAfter($('#schemaName'));
+								no_error = 0;
+							}
+							if ($("#userName").val().length == 0) {
+								console.log('userName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Access Key</span>')
+										.insertAfter($('#userName'));
+								no_error = 0;
+							}
+							if ($("#pwd").val().length == 0) {
+								console.log('pwd');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Secret Key</span>')
+										.insertAfter($('#pwd'));
+								no_error = 0;
+							}
+						}
+						
+						//Add the details for Kafka here this as Kafka doesn't have a structure 
+						
+						else if(($('#locationid').val() == 'Kafka')){
+							if ($("#dataupload_id").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please Upload a File</span>')
+										.insertAfter($('#dataupload_id'));
+								no_error = 0;
+							}
+							/* if ($("#datasetid").val().length == 0) {
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Dataset Name</span>')
+										.insertAfter($('#datasetid'));
+								no_error = 0;
+							} */
+							if ($("#hostName").val().length == 0) {
+								console.log('hostName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Bucket Name</span>')
+										.insertAfter($('#hostName'));
+								no_error = 0;
+							}
+							if ($("#schemaName").val().length == 0) {
+								console.log('schemaName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Key</span>')
+										.insertAfter($('#schemaName'));
+								no_error = 0;
+							}
+							if ($("#userName").val().length == 0) {
+								console.log('userName');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Access Key</span>')
+										.insertAfter($('#userName'));
+								no_error = 0;
+							}
+							if ($("#pwd").val().length == 0) {
+								console.log('pwd');
+								$(
+										'<span class="input_error" style="font-size:12px;color:red">Please enter Secret Key</span>')
+										.insertAfter($('#pwd'));
+								no_error = 0;
+							}
+						}
+						
+						
+						
+						var amit1 = $('#amit').html();
+						// alert("outside"+amit1)
+						console.log(amit1);
+						if (amit1 == "") {
+
+						} else {
+							console.log("inside if");
+							//toaster.info("Schema created successfully");
+							//$('<span class="input_error" style="font-size:12px;color:red">already exist Database Name</span>').insertAfter($('#descriptionid'));
+							no_error = 0;
+						}
+						if (no_error == 0) {
+							console.log('error');
+							return false;
+						} else {
+							$('.btn').addClass('hidden');
+
+						}
+		}
+	}
+	
+	 $('#schemaId').change(      
+		        function() {
+		        	var location = $('#locationid').val();
+		            if (location == 'Hive' || location == 'Hive Kerberos' ||location == 'Oracle RAC'||location == 'Oracle' || 
+		            		location == 'Postgres' || location == 'Teradata' || 
+		            		location =='Vertica' || location =='MSSQL'||
+		            		location =='MSSQLActiveDirectory'||location =='Amazon Redshift'||
+		            		location=='Cassandra'){
+		                var selectedVal = $this.val();
+		                $('#lstTable').empty();
+		                var form_data = {
+		                        schemaId : $("#schemaId").val(),
+		                        locationName: $("#locationid").val(),
+		                };
+		                $.ajax({
+		                    url : './populateTables',
+		                    type : 'GET',
+		                    beforeSend: function(){
+		                        $('#loading-progress').removeClass('hidden').show();                        
+		                    },
+		                    datatype : 'json',
+		                    data : form_data,
+		                    success: function(obj) {                         
+		                        $(obj).each(function(i, item){
+		                             $('#lstTable').append($('<option>', { 
+		                                    value: item,
+		                                    text : item
+		                                }));
+		                        }); 
+		                         $('#lstTable').multiselect('rebuild');
+		                         $('#lstTable').multiselect({
+		                                includeSelectAllOption: true
+		                         });
+		                        $('#s4_tablename_id').removeClass('hidden');                        
+		                    },
+		                    error : function() {
+		                        
+		                    },
+		                    complete: function(){
+		                        $('#loading-progress').addClass('hidden');
+		                     }
+		                }); 
+		            }else{
+		                $('#s4_tablename_id_2').removeClass('hidden');  
+		                $('#conditionid').removeClass('hidden');
+		            }               
+		    });
+	$('#locationid').change(
+			function() {
+				$this = $(this);
+				var selectedVal = $this.val();
+				if (selectedVal == 'Hive' 
+						|| selectedVal == 'Oracle'
+						|| selectedVal == 'MSSQL'
+						|| selectedVal == 'MSSQLActiveDirectory'
+						|| selectedVal == 'Vertica'
+						|| selectedVal == 'Postgres'
+						|| selectedVal == 'Teradata'
+						|| selectedVal == 'Cassandra'
+						|| selectedVal == 'Amazon Redshift'
+						|| selectedVal == 'Hive Kerberos'
+						|| selectedVal == 'Oracle RAC') {
+					$('#maprdivid').addClass('hidden');
+					$('#s4_form_id').removeClass('hidden').show();
+					$('#uploaddivid').addClass('hidden');
+					$('#s3_form_id').addClass('hidden');
+					$('#kafka_form_id').addClass('hidden');
+					$('#checkid').addClass('hidden');
+					$('#sourcedivid').addClass('hidden');
+					$('#s4_tablename_id').addClass('hidden');
+	                $('#s4_tablename_id_2').addClass('hidden');
+				} else if (selectedVal == 'File System'
+						|| selectedVal == 'HDFS'|| selectedVal == 'MapR FS') {
+					$('#maprdivid').addClass('hidden');
+					//$('#host-id').html('Host Name*');
+					$('#fileType').html('Data Source File*');
+					$('#checkid').removeClass('hidden');
+					$('#kafka_form_id').addClass('hidden');
+					$('#sourcedivid').removeClass('hidden').show();
+					//$('#sourcedivid').addClass('hidden');
+					$('#s4_form_id').addClass('hidden');
+					$('#uploaddivid').removeClass('hidden');
+					$('#s3_form_id').removeClass('hidden');
+					// $('#host-id-container').removeClass('hidden').show();
+					$('#host-id1').html('Host URI*');
+				     $('#folder-id1').html('Folder*');
+				     $('#user-id').html('User Login*');
+				     $('#user-pwd').html('Password*');
+				} else if (selectedVal == 'File Management') {
+					$('#maprdivid').addClass('hidden');
+					//$('#host-id').html('Host URI or Host IP*');
+					$('#fileType').html('File Management CSV*');
+					$('#uploaddivid').removeClass('hidden');
+					$('#s3_form_id').removeClass('hidden');
+					//hide remaining
+					$('#s4_form_id').addClass('hidden');
+					$('#kafka_form_id').addClass('hidden');
+					$('#checkid').addClass('hidden');
+					$('#sourcedivid').addClass('hidden');
+				} else if(selectedVal == 'S3'){
+					$('#maprdivid').addClass('hidden');
+					 $('#host-id1').html('Bucket Name*');
+				     $('#folder-id1').html('Key*');
+				     $('#user-id').html('Access Key*');
+				     $('#user-pwd').html('Secret Key*');
+				     $('#kafka_form_id').addClass('hidden');
+				     $('#fileType').html('Data Source File*');
+						$('#checkid').removeClass('hidden');
+						$('#sourcedivid').removeClass('hidden').show();
+						//$('#sourcedivid').addClass('hidden');
+						$('#s4_form_id').addClass('hidden');
+						$('#uploaddivid').removeClass('hidden');
+						$('#s3_form_id').removeClass('hidden');
+						//This is added for Kafka
+				}else if(selectedVal == 'Kafka'){
+					$('#maprdivid').addClass('hidden');
+					 $('#host-id1').html('Broker url*');
+				     $('#folder-id1').html('Topic Name*');
+				     //$('#user-id').parentNode.style.display='none';
+				     //$('#user-pwd').parentNode.style.display='none';
+				     $('#s3_form_id').addClass('hidden');
+				     $('#incremental_div').addClass('hidden');
+				     $('#usercred_div').addClass('hidden');
+				     
+				     $('#fileType').html('Data Source File*');
+					 $('#sourcedivid').removeClass('hidden').show();
+					 //$('#sourcedivid').addClass('hidden');
+					 $('#s4_form_id').addClass('hidden');
+					 $('#uploaddivid').removeClass('hidden');
+					 $('#kafka_form_id').removeClass('hidden');
+				}
+				
+				else if (selectedVal == 'MapR DB') {
+					//$('#host-id').html('Host Name*');
+					$('#maprdivid').removeClass('hidden');
+					$('#fileType').html('Data Source File*');
+					$('#checkid').removeClass('hidden');
+					$('#sourcedivid').removeClass('hidden').show();
+					//$('#sourcedivid').addClass('hidden');
+					$('#s4_form_id').addClass('hidden');
+					$('#uploaddivid').removeClass('hidden');
+					$('#s3_form_id').removeClass('hidden');
+					// $('#host-id-container').removeClass('hidden').show();
+					$('#host-id1').html('Host URI*');
+				     $('#folder-id1').html('Folder*');
+				     $('#user-id').html('User Login*');
+				     $('#user-pwd').html('Password*');
+				}
+			});
+	function viewChart(type, index){		
+		var response = analysisData[type];
+		var listOfValues;
+		if(response != ""){
+			var elements = jQuery.parseJSON(response);		
+			$.each(elements, function(i, item) {				
+				if(index == ""){
+					index = item.key;
+				}
+				if(item.key == index){
+					listOfValues = item.dataMap;
+					return false;
+				}
+			});
+		}  
+		
+		if(typeof listOfValues  !== "undefined" && listOfValues != "" ){
+			var data1 = new google.visualization.DataTable();
+			var colorArray = ['blue', 'yellow', 'pink'] ;
+			var index = 0;
+			if(type == 'Numerical'){
+				data1.addColumn('number', 'value');
+				data1.addColumn('number', 'data');
+				//data1.addColumn('string',{ role: "style" });
+				$.each(listOfValues, function(key, value) {					
+					data1.addRow([parseFloat(key), listOfValues[key]]);					
+				});		 
+			}else if(type == 'String & Character'){
+				data1.addColumn('string', 'value');
+				data1.addColumn('number', 'data');
+				$.each(listOfValues, function(key, value) {					
+					data1.addRow([key, listOfValues[key]]);				   
+				});	
+			}else if(type == 'Date'){
+				data1.addColumn('date', 'value');
+				data1.addColumn('number', 'data');				
+				$.each(listOfValues, function(key, value) {					
+					data1.addRow([new Date(key), listOfValues[key]]);				   
+				});	
+			}	
+			    	          
+        	  var title =  "Data Distribution:".concat(index);  
+              var options = {
+                  'title': title,
+                  titleTextStyle: {color: '#cc0000'},
+                  hAxis: {title: 'Data', direction: -1, showTextEvery: 2, slantedText: true, textStyle:{color: '#009900',fontSize: 12, bold: true}, titleTextStyle: {color: '#6600cc', bold: true}},         
+                  vAxis: {minValue: 0, textStyle:{color: '#009900', fontSize: 12, bold: true},titleTextStyle: {color: '#6600cc', bold: true}},
+                 
+                  width: 1200, 
+                  colors: ['ff6666'],   
+                  bar: { groupWidth: '70%' },
+                  isStacked: true
+              };
+
+              var chart = new google.visualization.ColumnChart(document.getElementById('chartDiv'));
+              chart.draw(data1, options);
+              $('#chartDiv').removeClass('hidden');
+		}else{
+			 $('#chartDiv').addClass('hidden');
+		}
+       	
+	}
+	
+	/* function hashCode (str){
+	    var hash = 0;
+	    if (str.length == 0) return hash;
+	    for (i = 0; i < str.length; i++) {
+	        char st= str.charCodeAt(i);
+	        hash = hash+st;
+	        //hash = hash & hash; // Convert to 32bit integer
+	    }
+	    return hash;
+	} */
+</script>
+</head>

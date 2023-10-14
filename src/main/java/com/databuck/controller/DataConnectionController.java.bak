@@ -1,0 +1,1300 @@
+package com.databuck.controller;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringJoiner;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.databuck.bean.ListDataSchema;
+import com.databuck.dao.IDataTemplateAddNewDAO;
+import com.databuck.dao.IListDataSourceDAO;
+import com.databuck.dao.SchemaDAOI;
+import com.databuck.service.RBACController;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
+
+@Controller
+public class DataConnectionController {
+	@Autowired
+	private IListDataSourceDAO listdatasourcedao;
+	@Autowired
+	public SchemaDAOI SchemaDAOI;
+	@Autowired
+	private RBACController rbacController;
+	@Autowired
+	IDataTemplateAddNewDAO dataTemplateAddNewDAO;
+
+	@RequestMapping(value = "/dataConnectionView")
+	public ModelAndView getListDataSchema(ModelAndView model, HttpSession session) throws IOException {
+
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Data Connection", "R", session);
+		if (rbac) {
+
+			List<ListDataSchema> listdataschema = listdatasourcedao.getListDataSchema();
+			model.addObject("listdataschema", listdataschema);
+			model.addObject("currentSection", "Data Connection");
+			model.addObject("currentLink", "DCView");
+			model.setViewName("dataConnectionView");
+			return model;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/editSchema", method = RequestMethod.GET)
+	public ModelAndView editSchema(HttpServletRequest req, HttpSession session) throws IOException {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Data Connection", "D", session);
+		if (rbac) {
+
+			long idDataSchema = Long.parseLong(req.getParameter("id"));
+			List<ListDataSchema> listdataschema = listdatasourcedao.getListDataSchemaForIdDataSchema(idDataSchema);
+
+			ModelAndView model = new ModelAndView();
+			System.out.println("getIdDataSchema=" + listdataschema.get(0).getIdDataSchema());
+			model.addObject("listdataschema", listdataschema);
+			model.addObject("idDataSchema", listdataschema.get(0).getIdDataSchema());
+
+			model.addObject("schemaName", listdataschema.get(0).getSchemaName());
+			model.addObject("schemaType", listdataschema.get(0).getSchemaType());
+
+			model.addObject("ipAddress", listdataschema.get(0).getIpAddress());
+			model.addObject("databaseSchema", listdataschema.get(0).getDatabaseSchema());
+			model.addObject("username", listdataschema.get(0).getUsername());
+			model.addObject("servicename", listdataschema.get(0).getKeytab());
+			model.addObject("krb5conf", listdataschema.get(0).getKrb5conf());
+			model.addObject("hivejdbchost", listdataschema.get(0).getHivejdbchost());
+			model.addObject("hivejdbcport", listdataschema.get(0).getHivejdbcport());
+			model.addObject("sslEnb", listdataschema.get(0).getSslEnb());
+			model.addObject("sslTrustStorePath", listdataschema.get(0).getsslTrustStorePath());
+			model.addObject("trustPassword", listdataschema.get(0).gettrustPassword());
+			model.addObject("gatewayPath", listdataschema.get(0).getGatewayPath());
+			model.addObject("jksPath", listdataschema.get(0).getJksPath());
+			model.addObject("zookeeperUrl", listdataschema.get(0).getZookeeperUrl());
+			System.out.println("gatewayPath:"+listdataschema.get(0).getGatewayPath());
+			System.out.println("jksPath:"+ listdataschema.get(0).getJksPath());
+			System.out.println("zookeeperUrl:"+ listdataschema.get(0).getZookeeperUrl());
+			
+			// model.addObject("username", listdataschema.get(0).getUsername());
+			if (listdataschema.get(0).getSchemaType().equalsIgnoreCase("oracle")) {
+				String[] split = listdataschema.get(0).getPort().split("/");
+				model.addObject("port", split[0]);
+				model.addObject("servicename", split[1]);
+			} else {
+				model.addObject("port", listdataschema.get(0).getPort());
+			}
+			model.addObject("domain", listdataschema.get(0).getDomain());
+			// System.out.println(listdataschema);
+			model.addObject("currentSection", "Data Connection");
+			model.addObject("currentLink", "DCView");
+			model.setViewName("editSchema");
+			return model;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/deleteSchema", method = RequestMethod.GET)
+	public ModelAndView deleteSchema(HttpServletRequest req, HttpSession session) throws IOException {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Data Connection", "D", session);
+		if (rbac) {
+
+			long idDataSchema = Long.parseLong(req.getParameter("id"));
+			int deleteSchema = listdatasourcedao.deleteSchema(idDataSchema);
+			System.out.println("idDataSchema" + idDataSchema);
+			System.out.println("deleteSchema" + deleteSchema);
+			List<ListDataSchema> listdataschema = listdatasourcedao.getListDataSchema();
+			ModelAndView model = new ModelAndView();
+			model.addObject("listdataschema", listdataschema);
+			model.addObject("message", "Schema Successfully Deleted");
+			model.addObject("currentSection", "Data Connection");
+			model.addObject("currentLink", "DCView");
+			model.setViewName("SchemaSuccessfullyDeleted");
+			return model;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/createSchema", method = RequestMethod.GET)
+	public ModelAndView getSchemaPage(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+
+		SqlRowSet RCAqueryForRowSet = null;
+
+		/*
+		 * String id = SchemaDAOI.getConnectionId(schemaName); System.out.println(id)
+		 */;
+
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Data Connection", "C", session);
+		if (rbac) {
+			ModelAndView modelAndView = new ModelAndView("createschema");
+			modelAndView.addObject("currentSection", "Data Connection");
+			modelAndView.addObject("currentLink", "DCAdd New");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+	
+	// Adding fields for Hive(Knox)
+
+	@RequestMapping(value = "/saveSchema", method = RequestMethod.POST)
+	public void getSchemaData(HttpServletRequest req, HttpServletResponse response, HttpSession session,
+			@RequestParam String schemaName, @RequestParam String schemaType, @RequestParam String uri,
+			@RequestParam String database, @RequestParam String username, @RequestParam String password,
+			@RequestParam String port, @RequestParam String domain, @RequestParam String serviceName,
+			@RequestParam String krb5conf, @RequestParam String autoGenerateId, @RequestParam String hivejdbchost,
+			@RequestParam String hivejdbcport, @RequestParam String suffix, @RequestParam String prefix,
+			@RequestParam String sslEnb, @RequestParam String sslTrustStorePath, @RequestParam String trustPassword, 
+			@RequestParam String gatewayPath, @RequestParam String jksPath, @RequestParam String zookeeperUrl) { //
+		Object user = session.getAttribute("user");
+
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("user:" + user);
+		// System.out.println("Port"+port);
+		String results = "";
+		System.out.println("schemaName=" + schemaName);
+		System.out.println("suffix=" + suffix);
+		System.out.println("autoGenerateId=" + autoGenerateId);
+		if (schemaType.equalsIgnoreCase("oracle")) {
+			port = port + "/" + serviceName;
+		}
+
+		Connection con = null;
+		// String name = SchemaDAOI.duplicateSchemaName(schemaName);
+		String name = null;
+		System.out.println("duplicateatabasename=" + name);
+		boolean flag = true;
+
+		if (name == null || name == "") {
+
+			if (schemaType.equalsIgnoreCase("oracle")) {
+				String url = "jdbc:oracle:thin:@" + uri + ":" + port;
+				try {
+					Class.forName("oracle.jdbc.driver.OracleDriver");
+					con = DriverManager.getConnection(url, username, password);
+
+				} catch (Exception e) {
+					flag = false;
+					System.out.println("con=" + con);
+					try {
+						JSONObject json = new JSONObject();
+						json.put("fail", "Data Connection failed,Please check Configuration");
+						response.getWriter().println(json);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					e.printStackTrace();
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("MSSQL")) {
+
+					String url = "jdbc:sqlserver://" + uri + ":" + port;
+					try {
+						Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("MSSQLActiveDirectory")) {
+					try {
+						Class.forName("net.sourceforge.jtds.jdbc.Driver");
+						String db_connect_string = "jdbc:jtds:sqlserver://" + uri.trim() + ":" + port.trim()
+								+ ";domain=" + domain.trim();
+						con = DriverManager.getConnection(db_connect_string, username.trim(), password.trim());
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Vertica")) {
+
+					int dotPosition = database.indexOf(".");
+					String database1 = database;
+					if (dotPosition != -1) {
+						database1 = database.substring(0, dotPosition);
+					}
+					String url = "jdbc:vertica://" + uri + ":" + port + "/" + database1;
+					try {
+						Class.forName("com.vertica.jdbc.Driver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Postgres")) {
+					String[] dbAndSchema = database.split(",");
+
+					String url = "jdbc:postgresql://" + uri + ":" + port + "/" + dbAndSchema[0];
+					if (dbAndSchema.length > 1 && dbAndSchema[1].length() > 0) {
+						url = url + "?currentSchema=" + dbAndSchema[1]
+								+ "&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+					} else {
+						url = url + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+					}
+					try {
+						Class.forName("org.postgresql.Driver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Teradata")) {
+					String[] dbAndSchema = database.split(",");
+
+					String url = "jdbc:teradata://" + uri;
+					try {
+						Class.forName("com.teradata.jdbc.TeraDriver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Cassandra")) {
+
+					try {
+						Cluster cluster = Cluster.builder().addContactPoint(uri).withCredentials(username, password)
+								.withPort(Integer.valueOf(port)).build();
+						Session cassandraSession = cluster.connect();
+						cluster.close();
+						cassandraSession.close();
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Hive") || schemaType.equalsIgnoreCase("Hive Kerberos")
+						|| schemaType.equalsIgnoreCase("ClouderaHive")) {
+					try {
+						String dbURL2 = "";
+						Class.forName("org.apache.hive.jdbc.HiveDriver");
+						// Hive Kerberos
+						if (schemaType.equalsIgnoreCase("Hive Kerberos")) {
+							System.setProperty("java.security.auth.login.config", serviceName);
+							System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
+							System.setProperty("java.security.krb5.conf", krb5conf);
+							Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+							// dbURL2 = "jdbc:hive2://" + uri + ":" + port + "/" + database + ";principal="
+							// + domain;
+
+							String zookeeperURL = hiveConnectionURL(uri, port, database);
+							System.out.println("zookeeperURL:" + zookeeperURL);
+							if (zookeeperURL != null)
+								dbURL2 = "jdbc:hive2://" + zookeeperURL;
+							else
+								dbURL2 = "jdbc:hive2://" + uri + ":" + port + "/" + database + ";principal=" + domain;
+
+							System.out.println("**dbURL2:" + dbURL2);
+							con = DriverManager.getConnection(dbURL2);
+						} else {
+							// ClouderaHive SSL enabled
+							if (schemaType.equalsIgnoreCase("ClouderaHive") && sslEnb != null
+									&& sslEnb.equalsIgnoreCase("Y")) {
+								dbURL2 = "jdbc:hive2://" + uri + ":" + port + "/" + database
+										+ ";ssl=true;sslTrustStore=" + sslTrustStorePath + ";trustStorePassword="
+										+ trustPassword;
+							}
+							// Normal Hive connection
+							else {
+								dbURL2 = "jdbc:hive2://" + uri + ":" + port + "/" + database;
+							}
+							con = DriverManager.getConnection(dbURL2, username, password);
+						}
+
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Amazon Redshift")) {
+					try {
+						Class.forName("com.amazon.redshift.jdbc42.Driver");
+						Properties props = new Properties();
+						props.setProperty("user", username);
+						props.setProperty("password", password);
+						con = DriverManager.getConnection("jdbc:redshift://" + uri + ":" + port + "/" + database,
+								props);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+
+					}
+				}
+			}
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Oracle RAC")) {
+					String url = "jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)" + "(HOST = " + uri
+							+ ")(PORT = " + port + "))(CONNECT_DATA =(SERVER = DEDICATED)" + "(SERVICE_NAME = "
+							+ serviceName + ")))";
+					try {
+						Class.forName("oracle.jdbc.driver.OracleDriver");
+						con = DriverManager.getConnection(url, username, password);
+
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+
+				}
+			}
+			
+			// getSchemaPage(session, schemaName);
+			// changes for import added mysql 29jan2019
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("MySQL")) {
+
+					String url = "jdbc:mysql://" + uri + ":" + port;
+					try {
+						Class.forName("com.mysql.jdbc.Driver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+
+				}
+
+			}
+
+			// -------------------
+
+			// changes for MapR 28May2019
+
+			/*
+			 * Hostname : ec2-3-81-127-18.compute-1.amazonaws.com
+			 * 
+			 * Port : 8243
+			 * 
+			 * Username : mapr
+			 * 
+			 * Password : Welcome1
+			 */
+
+			// +";ssl=true"
+
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("MapR")) {
+
+					String url = "jdbc:hive2://" + uri + ":" + port + "/" + database;
+					// String url = "jdbc:hive2://" + uri + ":" + port +
+					// "/default;principal=hive/ec2-3-81-127-18.compute-1.amazonaws.com";
+					System.out.println("In MapR =" + url);
+
+					try {
+						Class.forName("org.apache.hive.jdbc.HiveDriver");
+						con = DriverManager.getConnection(url, username, password);
+					} catch (Exception e) {
+						flag = false;
+						try {
+							JSONObject json = new JSONObject();
+							json.put("fail", "Data Connection failed,Please check Configuration");
+							response.getWriter().println(json);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+
+				}
+
+			}
+			// ----------- Added Hive (Knox) connection 4June2019
+			if (flag) {
+				if (schemaType.equalsIgnoreCase("Hive knox")) {
+
+					/*
+					 * connection URL has to be following:
+					 * 
+					 * jdbc:hive2://<gateway-host>:<gateway-port>/?hive.server2.servermode=https;hive.server2.http.path=<gateway-path>/<cluster-name>/hive
+					 * 
+					 */
+					System.setProperty("javax.net.ssl.trustStore", jksPath);
+
+					String url = hiveKnoxConnectionURL(uri, port, database, gatewayPath);
+
+					System.out.println("In Hive Knox =>" + url);
+
+					try {
+						// load Hive JDBC Driver
+						Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+						// configure JDBC connection
+						con = DriverManager.getConnection(url, username, password);
+
+					} catch (Exception e) {
+						flag = false;
+						try {
+							response.getWriter().println("Data Connection failed,Please check Configuration");
+						} catch (Exception e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+
+				}
+
+			}
+			
+			if (flag) {
+				Long idDataSchema = SchemaDAOI.saveDataIntoListDataSchema(uri, database, username, password, port,
+						schemaName, schemaType, domain, serviceName, krb5conf, autoGenerateId, suffix, prefix,
+						hivejdbchost, hivejdbcport, sslEnb, sslTrustStorePath, trustPassword, gatewayPath, jksPath, zookeeperUrl);
+				System.out.println("idDataSchema=" + idDataSchema);
+				if (autoGenerateId.equalsIgnoreCase("Y")) {
+					if (schemaType.equalsIgnoreCase("Oracle RAC")) {
+						SchemaDAOI.insertDataIntoHiveSourceForAutoGenerateStatus(idDataSchema);
+						SchemaDAOI.processAutoGenerateTemplate_oracleRAC(uri, database, username, password, port,
+								schemaName, schemaType, domain, serviceName, krb5conf, autoGenerateId, idUser,
+								idDataSchema);
+					}
+				}
+				try {
+					JSONObject json = new JSONObject();
+					json.put("success", "Data Connection Created Successfully");
+					json.put("idDataSchema", idDataSchema);
+					response.getWriter().println(json);
+					System.out.println("Data Connection Created Successfully");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				/*
+				 * else { try { JSONObject json = new JSONObject(); json.put("fail",
+				 * "Schema Name already exists"); response.getWriter().println(json);
+				 * System.out.println("Schema Name already exists"); } catch (Exception e) {
+				 * e.printStackTrace(); } }
+				 */
+			}
+
+
+		}
+	}
+
+	@RequestMapping(value = "/statusBarAutoDt", method = RequestMethod.POST, produces = "application/json")
+	public void startStatuspoll(HttpServletRequest request, HttpSession session, HttpServletResponse response) {
+		Long statusForAutoDT = SchemaDAOI.getStatusForAutoDT();
+		JSONObject json = new JSONObject();
+		json.put("percentage", statusForAutoDT);
+		System.out.println(json);
+		// json.put("appName", appName);
+		try {
+			response.getWriter().println(json);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	@RequestMapping(value = "/updateSchema", method = RequestMethod.POST)
+	public void updateSchema(HttpServletRequest req, HttpServletResponse response, HttpSession session,
+			@RequestParam String schemaName, @RequestParam String schemaType, @RequestParam String uri,
+			@RequestParam String database, @RequestParam String username, @RequestParam String password,
+			@RequestParam String port, @RequestParam String domain, @RequestParam String hivejdbchost,
+			@RequestParam String hivejdbcport, @RequestParam String serviceName, @RequestParam long idDataSchema,
+			@RequestParam String krb5conf, @RequestParam String sslTrustStorePath, @RequestParam String trustPassword, 
+			@RequestParam String gatewayPath, @RequestParam String jksPath,@RequestParam String zookeeperUrl) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("password=" + password);
+		String results = "";
+		// System.out.println("schemaName="+schemaName);
+		System.out.println("schemaType=" + schemaType);
+		if (schemaType.equalsIgnoreCase("oracle")) {
+			port = port + "/" + serviceName;
+		}
+		// String name = SchemaDAOI.duplicateSchemaName(schemaName);
+		// System.out.println("duplicateatabasename=" + name);
+		// if (name == null || name == "") {
+		Long update = SchemaDAOI.updateDataIntoListDataSchema(uri, database, username, password, port, schemaName,
+				schemaType, domain, idDataSchema, serviceName, krb5conf, hivejdbchost, hivejdbcport, sslTrustStorePath,
+				trustPassword, gatewayPath, jksPath, zookeeperUrl);
+		System.out.println("update=" + update);
+		try {
+			System.out.println("Data Connection Customized Successfully");
+			response.getWriter().println("Data Connection Customized Successfully");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*
+		 * } else { try { System.out.println("Schema Name already exists");
+		 * response.getWriter().println("Schema Name already exists"); } catch
+		 * (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); } }
+		 */
+	}
+
+	@RequestMapping(value = "/testDataConnection", method = RequestMethod.POST)
+	public void testDataConnection(HttpServletRequest req, HttpServletResponse response, HttpSession session,
+			@RequestParam String schemaName, @RequestParam String schemaType, @RequestParam String uri,
+			@RequestParam String database, @RequestParam String username, @RequestParam String password,
+			@RequestParam String port, @RequestParam String domain, @RequestParam String serviceName,
+			@RequestParam String krb5conf, @RequestParam long idDataSchema,@RequestParam String gatewayPath, @RequestParam String jksPath) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (password.trim().length() > 1) {
+
+		} else {
+			password = SchemaDAOI.getPasswordForIdDataSchema(idDataSchema);
+		}
+		System.out.println("password=" + password);
+		System.out.println("schemaType=" + schemaType);
+		Connection con = null;
+		Session cassandraSession = null;
+		if (schemaType.equalsIgnoreCase("Oracle")) {
+
+			port = port + "/" + serviceName;
+
+			String url = "jdbc:oracle:thin:@" + uri + ":" + port;
+			try {
+				Class.forName("oracle.jdbc.driver.OracleDriver");
+				con = DriverManager.getConnection(url, username, password);
+				// System.out.println(con);
+			} catch (Exception e) {
+				// System.out.println(con);
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		} else if (schemaType.equalsIgnoreCase("Oracle RAC")) {
+			String url = "jdbc:oracle:thin:@(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)" + "(HOST = " + uri + ")(PORT = "
+					+ port + "))(CONNECT_DATA =(SERVER = DEDICATED)" + "(SERVICE_NAME = " + serviceName + ")))";
+			try {
+				Class.forName("oracle.jdbc.driver.OracleDriver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		} else if (schemaType.equalsIgnoreCase("MSSQL")) {
+
+			String url = "jdbc:sqlserver://" + uri + ":" + port;
+			try {
+				Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		} else if (schemaType.equalsIgnoreCase("Postgres")) {
+			String[] dbAndSchema = database.split(",");
+
+			String url = "jdbc:postgresql://" + uri + ":" + port + "/" + dbAndSchema[0];
+			if (dbAndSchema.length > 1 && dbAndSchema[1].length() > 0) {
+				url = url + "?currentSchema=" + dbAndSchema[1]
+						+ "&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+			} else {
+				url = url + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
+			}
+			try {
+				Class.forName("org.postgresql.Driver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		} else if (schemaType.equalsIgnoreCase("Teradata")) {
+			String[] dbAndSchema = database.split(",");
+
+			String url = "jdbc:teradata://" + uri;
+			try {
+				Class.forName("com.teradata.jdbc.TeraDriver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+		} else if (schemaType.equalsIgnoreCase("MSSQLActiveDirectory")) {
+
+			try {
+				Class.forName("net.sourceforge.jtds.jdbc.Driver");
+				String db_connect_string = "jdbc:jtds:sqlserver://" + uri.trim() + ":" + port.trim() + ";domain="
+						+ domain.trim();
+				con = DriverManager.getConnection(db_connect_string, username.trim(), password.trim());
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+
+			}
+
+		} else if (schemaType.equalsIgnoreCase("Vertica")) {
+
+			int dotPosition = database.indexOf(".");
+			String database1 = database;
+			if (dotPosition != -1) {
+				database1 = database.substring(0, dotPosition);
+			}
+			String url = "jdbc:vertica://" + uri + ":" + port + "/" + database1;
+			try {
+				Class.forName("com.vertica.jdbc.Driver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		} else if (schemaType.equalsIgnoreCase("Cassandra")) {
+			try {
+				Cluster cluster = Cluster.builder().addContactPoint(uri).withCredentials(username, password)
+						.withPort(Integer.valueOf(port)).build();
+				cassandraSession = cluster.connect();
+				cluster.close();
+				cassandraSession.close();
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+		} else if (schemaType.equalsIgnoreCase("Hive") || schemaType.equalsIgnoreCase("Cloudera Hive")) {
+			try {
+				String dbURL2 = "jdbc:hive2://" + uri + ":" + port + "/" + database;
+				Class.forName("org.apache.hive.jdbc.HiveDriver");
+				con = DriverManager.getConnection(dbURL2, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+
+			}
+		} else if (schemaType.equalsIgnoreCase("Hive Kerberos")) {
+			try {
+				System.setProperty("java.security.auth.login.config", serviceName);
+				// System.setProperty("sun.security.jgss.debug","true");
+				System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
+				System.setProperty("java.security.krb5.conf", krb5conf);
+				Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+				// In case of zookeeper url there is no need of principal name
+				String zookeeperURL = hiveConnectionURL(uri, port, database);
+				String url = null;
+				if (zookeeperURL != null)
+					url = "jdbc:hive2://" + zookeeperURL;
+				else
+					url = "jdbc:hive2://" + uri + ":" + port + "/" + database + ";principal=" + domain;
+
+				con = DriverManager.getConnection(url);
+			} catch (Exception e) {
+				try {
+					JSONObject json = new JSONObject();
+					json.put("fail", "Data Connection failed,Please check Configuration");
+					response.getWriter().println(json);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+
+			}
+		} else if (schemaType.equalsIgnoreCase("Amazon Redshift")) {
+			try {
+				// String dbURL2 = "jdbc:hive2://"+uri+":"+port+"/"+database;
+				Class.forName("com.amazon.redshift.jdbc42.Driver");
+				Properties props = new Properties();
+				props.setProperty("user", username);
+				props.setProperty("password", password);
+				con = DriverManager.getConnection("jdbc:redshift://" + uri + ":" + port + "/" + database, props);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+
+			}
+		} else if (schemaType.equalsIgnoreCase("MySQL")) { // changes for import mysql connection 29jan2019
+
+			String url = "jdbc:mysql://" + uri + ":" + port;
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+				con = DriverManager.getConnection(url, username, password);
+			} catch (Exception e) {
+				try {
+					response.getWriter().println("Data Connection failed,Please check Configuration");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+
+		}
+
+		// -------------------
+
+		// changes for MapR 28May2019
+
+		/*
+		 * Hostname : ec2-3-81-127-18.compute-1.amazonaws.com
+		 * 
+		 * Port : 8243
+		 * 
+		 * Username : mapr
+		 * 
+		 * Password : Welcome1
+		 */
+
+		// +";ssl=true"
+
+		else
+			if (schemaType.equalsIgnoreCase("MapR")) {
+
+				String url = "jdbc:hive2://" + uri + ":" + port + "/" + database;
+				// String url = "jdbc:hive2://" + uri + ":" + port +
+				// "/default;principal=hive/ec2-3-81-127-18.compute-1.amazonaws.com";
+				System.out.println("In MapR =" + url);
+
+				try {
+					Class.forName("org.apache.hive.jdbc.HiveDriver");
+					con = DriverManager.getConnection(url, username, password);
+				} catch (Exception e) {
+				
+					try {
+						response.getWriter().println("Data Connection failed,Please check Configuration");
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					e.printStackTrace();
+				}
+
+			}
+
+		
+		// ----------- Added Hive (Knox) connection 4June2019
+			else
+				if (schemaType.equalsIgnoreCase("Hive knox")) {
+					/*
+					  connection URL has to be following:
+					  
+					  jdbc:hive2://<gateway-host>:<gateway-port>/?hive.server2.servermode=https;hive.server2.http.path=<gateway-path>/<cluster-name>/hive
+					 
+					 */
+					System.setProperty("javax.net.ssl.trustStore",jksPath);
+					
+					String url = hiveKnoxConnectionURL(uri, port, database, gatewayPath);
+					
+					System.out.println("In Hive Knox =>"+url);
+					
+					try {
+					     // load Hive JDBC Driver
+					      Class.forName( "org.apache.hive.jdbc.HiveDriver" );
+					 
+					      // configure JDBC connection
+					      con = DriverManager.getConnection( url, username, password );
+						
+					} catch (Exception e) {
+						try {
+							response.getWriter().println("Data Connection failed,Please check Configuration");
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						e.printStackTrace();
+					}
+					
+
+				}
+
+		// --------------------
+		if (con != null || cassandraSession != null) {
+			System.out.println("Connection Established Successfully");
+			try {
+				response.getWriter().println("Connection Established Successfully");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	@RequestMapping(value = "/saveDataTemplateDataInListDataDefinition", method = RequestMethod.POST)
+	public void saveDataTemplateDataInListDataDefinition(HttpServletRequest req, HttpServletResponse response,
+			HttpSession session, @RequestParam Long idColumn, @RequestParam String columnName,
+			@RequestParam String columnValue) throws JSONException, IOException {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (columnValue.equalsIgnoreCase("y")) {
+			columnValue = "Y";
+		} else if (columnValue.equalsIgnoreCase("n")) {
+			columnValue = "N";
+		}
+
+		ArrayList<String> al = new ArrayList<String>();
+		al.add("nonNull");
+		al.add("primaryKey");
+		al.add("hashValue");
+		al.add("numericalStat");
+		al.add("stringStat");
+		al.add("KBE");
+		al.add("dgroup");
+		al.add("dupkey");
+		al.add("measurement");
+		al.add("incrementalCol");
+		al.add("recordAnomaly");
+		al.add("dataDrift");
+		al.add("outOfNormStat");
+		al.add("isMasked");
+		al.add("partitionBy");
+		al.add("badData");
+		al.add("lengthCheck");
+		al.add("dGroupNullCheck");
+		al.add("dGroupDateRuleCheck");
+
+		// changes for lengthValue 4dec2019
+		// al.add("lengthValue");
+
+		/*
+		 * al.add("Sachin"); al.add("Amit"); al.add("Vijay"); al.add("Kumar");
+		 * al.add("Sachin");
+		 */
+		boolean flag = true;
+		if (al.contains(columnName)) {
+			if (columnValue.equalsIgnoreCase("Y") || columnValue.equalsIgnoreCase("N")) {
+
+			} else {
+				flag = false;
+			}
+		}
+		System.out.println("idColumn=" + idColumn);
+		System.out.println("columnName=" + columnName);
+		System.out.println("columnValue=" + columnValue);
+		if (flag) {
+			Long update = SchemaDAOI.updateDataIntoListDataDefinition(idColumn, columnName, columnValue);
+			SchemaDAOI.updateKBEIntoListDataDefinition(idColumn, columnName, columnValue);
+			System.out.println("update=" + update);
+
+			if (update == -1) {
+				JSONObject json = new JSONObject();
+
+				json.put("success", "Not Allowed For This Data Type");
+
+				if (columnName.equals("lengthValue")) {
+					System.out.println("If ...........lengthValue =>" + columnName);
+					json.put("columnValue", "0");
+				} else {
+					System.out.println("Else...........lengthValue =>" + columnName);
+					json.put("columnValue", "N");
+				}
+
+				response.getWriter().println(json);
+			}
+
+			else if (update > 0) {
+				JSONObject json = new JSONObject();
+				System.out.println("update > 0 ................ =>" + columnName);
+				json.put("success", "Item Updated Successfully");
+				json.put("columnValue", columnValue);
+				response.getWriter().println(json);
+			} else {
+
+				JSONObject json = new JSONObject();
+
+				json.put("success", "Item failed to Update");
+				response.getWriter().println(json);
+			}
+		} else {
+			JSONObject json = new JSONObject();
+			json.put("fail", "Please write Y for Yes and N for No");
+			response.getWriter().println(json);
+		}
+	}
+
+	@RequestMapping(value = "/duplicateSchemaName", method = RequestMethod.POST)
+	public void duplicatedatatemplatename(HttpServletRequest req, HttpServletResponse res, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				res.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		String dataSchemaName = req.getParameter("val");
+		// System.out.println("dataTemplateName=" + dataTemplateName);
+		String name = SchemaDAOI.duplicateSchemaName(dataSchemaName);
+		// System.out.println("name=" + name);
+		if (name != null) {
+			try {
+				res.getWriter().println("This Schema Name is in use. Please choose another name.");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping(value = "/addNewBatch")
+	public ModelAndView addNewBatch(HttpServletRequest req, HttpServletResponse res, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Data Connection", "C", session);
+		if (rbac) {
+
+			ModelAndView modelAndView = new ModelAndView("addNewBatch");
+			modelAndView.addObject("currentSection", "Data Connection");
+			modelAndView.addObject("currentLink", "DCBatchAdd New");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/createSchemaBatch", method = RequestMethod.POST)
+	public @ResponseBody ModelAndView createSchemaBatch(@RequestParam("dataupload") MultipartFile file,
+			HttpSession session, HttpServletRequest request, HttpServletResponse res) {
+		Object user = session.getAttribute("user");
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("idUser=" + idUser);
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		ModelAndView modelAndView = new ModelAndView("message");
+		modelAndView.addObject("msg", "Batch Schema Created Successfully");
+		String schemaBatchName = request.getParameter("schemaName");
+		String schemaType = request.getParameter("schemaType");
+		System.out.println("schemaName=" + schemaBatchName);
+		System.out.println("schemaType=" + schemaType);
+		Long idBatchSchema = SchemaDAOI.insertDataIntoListBatchSchema(schemaBatchName, schemaType,
+				file.getOriginalFilename());
+		if (schemaType.equalsIgnoreCase("Oracle RAC")) {
+			try {
+				String line = "";
+				String cvsSplitBy = ",";
+				InputStream inputStream = file.getInputStream();
+				BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+				br.readLine();
+				while ((line = br.readLine()) != null) {
+					try {
+						String[] data = line.split(cvsSplitBy);
+						String schemaName = data[0];
+						String uri = data[1];
+						String database = data[2];
+						String port = data[3];
+						String username = data[4];
+						String password = data[5];
+						String serviceName = data[6];
+						String autoGenerate = data[7];
+						Long idDataSchema = SchemaDAOI.saveDataIntoListDataSchema(uri, database, username, password,
+								port, schemaName, schemaType, "", serviceName, "", autoGenerate, "", "", "", "", "", "",
+								"","","","");
+						System.out.println("idDataSchema=" + idDataSchema);
+						if (autoGenerate.equalsIgnoreCase("Y")) {
+							SchemaDAOI.processAutoGenerateTemplate_oracleRAC(uri, database, username, password, port,
+									schemaName, schemaType, "", serviceName, "", autoGenerate, idUser, idDataSchema);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else if (schemaType.equalsIgnoreCase("Hive Kerberos")) {
+			try {
+				String line = "";
+				String cvsSplitBy = ",";
+				InputStream inputStream = file.getInputStream();
+				BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+				br.readLine();
+				StringJoiner idDataSchemas = new StringJoiner(",");
+				while ((line = br.readLine()) != null) {
+					try {
+						String[] data = line.split(cvsSplitBy);
+						String schemaName = data[0];
+						String principal = data[1];
+						String hiveip = data[2];
+						String gss_jaas = data[3];
+						String krb5conf = data[4];
+						String dbName = data[5];
+						String port = data[6];
+						String username = data[7];
+						String password = data[8];
+						String autoGenerate = data[9];
+						String suffixes = data[10];
+						String prefixes = data[11];
+						Long createdBy = 1l;
+
+						Long idDataSchema = SchemaDAOI.saveDataIntoListDataSchema(hiveip, dbName, username, password,
+								port, schemaName, schemaType, principal, gss_jaas, krb5conf, autoGenerate, suffixes,
+								prefixes, "", "", "", "", "","","","");
+
+						idDataSchemas.add(idDataSchema.toString());
+						/*
+						 * if(autoGenerate.equalsIgnoreCase("Y")){ try { System.out.println("java -jar "
+						 * + System.getenv("DATABUCK_HOME") + "/hive-kerberos-con-autodt.jar " +
+						 * idDataSchema); Process proc = Runtime.getRuntime() .exec("java -jar " +
+						 * System.getenv("DATABUCK_HOME") + "/hive-kerberos-con-autodt.jar " +
+						 * idDataSchema); proc.waitFor(); // Then retreive the process output
+						 * InputStream in = proc.getInputStream(); InputStream err =
+						 * proc.getErrorStream();
+						 * 
+						 * byte b[] = new byte[in.available()]; in.read(b, 0, b.length);
+						 * System.out.println(new String(b));
+						 * 
+						 * byte c[] = new byte[err.available()]; err.read(c, 0, c.length);
+						 * System.out.println(new String(c)); } catch (Exception e) { } }
+						 */
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				SchemaDAOI.updateidDataSchemasInListBatchSchema(idBatchSchema, idDataSchemas.toString());
+				try {
+					System.out.println("java -jar " + System.getenv("DATABUCK_HOME")
+							+ "/hive-kerberos-batch-schema.jar " + idBatchSchema);
+					Process proc = Runtime.getRuntime().exec("java -jar " + System.getenv("DATABUCK_HOME")
+							+ "/hive-kerberos-batch-schema.jar " + idBatchSchema);
+					proc.waitFor();
+					// Then retreive the process output
+					InputStream in = proc.getInputStream();
+					InputStream err = proc.getErrorStream();
+
+					byte b[] = new byte[in.available()];
+					in.read(b, 0, b.length);
+					System.out.println(new String(b));
+
+					byte c[] = new byte[err.available()];
+					err.read(c, 0, c.length);
+					System.out.println(new String(c));
+				} catch (Exception e) {
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		modelAndView.addObject("currentSection", "Data Connection");
+		modelAndView.addObject("currentLink", "DCBatchAdd New");
+		return modelAndView;
+	}
+
+	private String hiveConnectionURL(String hosts, String port, String domain) {
+		String zookeeperURL = null;
+
+		// Check if the server has commad seperated values to identify if it is a
+		// zookeeper connection
+		if (hosts.contains(",") || port.equalsIgnoreCase("2181")) {
+			String parts[] = hosts.split("\\,");
+			System.out.print(parts);
+			for (String part : parts) {
+				System.out.println(" part");
+				System.out.println(part);
+				if (zookeeperURL != null)
+					zookeeperURL = zookeeperURL + "," + part + ":2181";
+				else
+					zookeeperURL = part + ":2181";
+			}
+		}
+
+		if (zookeeperURL != null)
+			zookeeperURL = zookeeperURL + "/" + domain
+					+ ";serviceDiscoveryMode=zooKeeper;zooKeeperNamespace=hiveserver2;transportMode=http;httpPath=cliservice";
+
+		System.out.println(" zookeeperURL");
+		System.out.println(zookeeperURL);
+		return zookeeperURL;
+	}
+	
+	private String hiveKnoxConnectionURL(String hosts, String port, String database, String gatewayPath) {
+		String knoxUrl = "jdbc:hive2://"+hosts+":"+port+"/"+database+";ssl=true;transportMode=http;httpPath="+gatewayPath;
+		return knoxUrl;
+	}
+	
+}

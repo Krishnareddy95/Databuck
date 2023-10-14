@@ -1,0 +1,584 @@
+package com.databuck.controller;
+
+import java.util.Date;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.collections.map.MultiValueMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.databuck.bean.DATA_QUALITY_Transactionset_sum_A1;
+import com.databuck.bean.DataQualityMasterDashboard;
+import com.databuck.bean.ListApplications;
+import com.databuck.bean.ListDataSource;
+import com.databuck.dao.DQIGraphDAOI;
+import com.databuck.dao.IResultsDAO;
+import com.databuck.dao.IValidationCheckDAO;
+import com.databuck.dao.IValidationDAO;
+import com.databuck.dao.MatchingResultDao;
+import com.databuck.service.IDashBoardService;
+import com.databuck.service.IValidationService;
+import com.databuck.service.RBACController;
+
+
+@Controller
+public class DashBoardController {
+
+	@Autowired
+	public IValidationService validationService;
+
+	@Autowired
+	public IDashBoardService dashBoardService;
+
+	@Autowired
+	public IResultsDAO iResultsDAO;
+
+	@Autowired
+	MatchingResultDao matchingresultdao;
+
+	@Autowired
+	DQIGraphDAOI dqiGraphDAOI;
+
+	@Autowired
+	IValidationCheckDAO validationcheckdao;
+
+	@Autowired
+	public IValidationDAO ivalidationdao;
+	@Autowired
+	private RBACController rbacController;
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate1;
+
+	@RequestMapping(value = "/dashboard_View")
+	public ModelAndView dashboardView(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Results", "R", session);
+		if (rbac) {
+
+			System.out.println("dashboard controller");
+			ModelAndView modelAndView = new ModelAndView("resultDashboard");
+
+			SqlRowSet getdatafromresultmaster = ivalidationdao.getdatafromresultmaster();
+			Map<Long, String> resultmasterdata = new LinkedHashMap<Long, String>();
+
+			// Map resultmasterdata = new HashMap<>();
+			while (getdatafromresultmaster.next()) {
+				resultmasterdata.put(getdatafromresultmaster.getLong(1), getdatafromresultmaster.getString(2));
+
+				System.out.println(getdatafromresultmaster.getLong(1) + "" + getdatafromresultmaster.getString(2));
+			}
+
+			// List<ListApplications> listapplicationsData =
+			// matchingresultdao.getdatafromlistapplications();
+			// List<DataQualityMasterDashboard> dashboardTable =
+			// iResultsDAO.getMasterDashboardForDataQuality(resultmasterdata,listapplicationsData);
+
+			List<DataQualityMasterDashboard> dashboardTable = iResultsDAO.getDataFromDataQualityDashboard();
+			modelAndView.addObject("dashboardTable", dashboardTable);
+			modelAndView.addObject("resultmasterdata", resultmasterdata);
+			modelAndView.addObject("currentSection", "Dashboard");
+			modelAndView.addObject("currentLink", "View");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/dashboardMaps")
+	public ModelAndView dashboardMaps(HttpServletRequest request, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Results", "R", session);
+		if (rbac) {
+
+			// System.out.println("schema"+request.getParameter("schema"));
+			long idDataSchema = Long.parseLong(request.getParameter("schema"));
+			System.out.println("dashboard controller");
+			ModelAndView modelAndView = new ModelAndView("dashboardSchemaView");
+			System.out.println("iDashBoardService" + dashBoardService);
+			List<ListDataSource> listOfDataSources = dashBoardService.getDataFromDataSources(idDataSchema);
+			modelAndView.addObject("currentSection", "Dashboard");
+			modelAndView.addObject("listOfDataSources", listOfDataSources);
+			System.out.println("listOfDataSources.size():" + listOfDataSources.size());
+			modelAndView.addObject("currentLink", "View");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	/*
+	 * @RequestMapping(value = "/dashboard_table") public ModelAndView
+	 * dashboardTableView(HttpServletRequest req, HttpSession session) {
+	 * 
+	 * DecimalFormat decimalFormat = new DecimalFormat();
+	 * decimalFormat.setRoundingMode(RoundingMode.DOWN);
+	 * decimalFormat.setGroupingUsed(true); decimalFormat.setGroupingSize(3);
+	 * 
+	 * Object user = session.getAttribute("user"); System.out.println("user:" +
+	 * user); if ((user == null) || (!user.equals("validUser"))) { return new
+	 * ModelAndView("loginPage"); } boolean rbac = rbacController.rbac("Results",
+	 * "R", session); if (rbac) {
+	 * 
+	 * ModelAndView modelAndView = new ModelAndView("dashboardTableView");
+	 * modelAndView.addObject("recordCount", 0);
+	 * modelAndView.addObject("averageRecordCount", 0);
+	 * modelAndView.addObject("nonNullColumns", 0);
+	 * modelAndView.addObject("nonNullColumnsFailed", 0);
+	 * modelAndView.addObject("allFields", 0);
+	 * modelAndView.addObject("identityFields", 0);
+	 * modelAndView.addObject("numberOfRecordsFailed", 0);
+	 * modelAndView.addObject("numberofStringColumnsFailed", 0);
+	 * modelAndView.addObject("numberofNumericalColumnsFailed", 0); //
+	 * modelAndView.addObject("numberOfRecordsFailed", 0);
+	 * modelAndView.addObject("recordCountAnomalyGraphValues", "");
+	 * modelAndView.addObject("TransactionSetTable", "");
+	 * 
+	 * modelAndView.addObject("toDate", (String)session.getAttribute("toDate"));
+	 * modelAndView.addObject("fromDate", (String)session.getAttribute("fromDate"));
+	 * if((int)session.getAttribute("RunFilter") == 0){
+	 * modelAndView.addObject("Run", ""); } else{ modelAndView.addObject("Run",
+	 * (int)session.getAttribute("RunFilter")); }
+	 * 
+	 * 
+	 * List<DATA_QUALITY_Transactionset_sum_A1> transactionSetTable = null; long
+	 * idApp = Long.parseLong(req.getParameter("idApp"));
+	 * System.out.println("idApp======" + idApp); SqlRowSet
+	 * tableNamesFromResultMasterTable =
+	 * iResultsDAO.getTableNamesFromResultMasterTable(idApp); Long
+	 * nonNullColumnsFailed = 0l; Long numberofNumericalColumnsFailed = 0l; Long
+	 * numberofStringColumnsFailed = 0l; Long recordAnomalyTotal = 0l; Long
+	 * numberOfRecordsFailed = 0l; ListApplications listApplicationsData =
+	 * validationcheckdao.getdatafromlistapplications(idApp); Long idData = 0l;
+	 * SqlRowSet idDataAndAppName =
+	 * iResultsDAO.getIdDataAndAppNameFromListApplications(idApp); while
+	 * (idDataAndAppName.next()) { idData = idDataAndAppName.getLong("idData");
+	 * modelAndView.addObject("applicationName",
+	 * idDataAndAppName.getString("name")); }
+	 * 
+	 * 
+	 * int maxRun = 1;
+	 * if(listApplicationsData.getKeyGroupRecordCountAnomaly().equalsIgnoreCase("Y")
+	 * ){ maxRun = jdbcTemplate1.queryForObject(
+	 * "select max(Run) from DATA_QUALITY_" + listApplicationsData.getIdApp() +
+	 * "_Transactionset_sum_dgroup where "+
+	 * "Date=(select max(Date) from DATA_QUALITY_" + listApplicationsData.getIdApp()
+	 * + "_Transactionset_sum_dgroup)", Integer.class); }else{ maxRun =
+	 * jdbcTemplate1.queryForObject( "select max(Run) from DATA_QUALITY_" +
+	 * listApplicationsData.getIdApp() + "_Transactionset_sum_A1 where Date="+
+	 * "(select max(Date) from DATA_QUALITY_" + listApplicationsData.getIdApp() +
+	 * "_Transactionset_sum_A1)", Integer.class); }
+	 * 
+	 * Date maxDate = null;
+	 * if(listApplicationsData.getKeyGroupRecordCountAnomaly().equalsIgnoreCase("Y")
+	 * ){ maxDate = jdbcTemplate1.queryForObject(
+	 * "select max(Date) from DATA_QUALITY_" + listApplicationsData.getIdApp() +
+	 * "_Transactionset_sum_dgroup", Date.class); }else{ maxDate =
+	 * jdbcTemplate1.queryForObject("select max(Date) from DATA_QUALITY_" +
+	 * listApplicationsData.getIdApp() + "_Transactionset_sum_A1", Date.class); }
+	 * 
+	 * SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd"); String strMaxDate =
+	 * dt.format(maxDate);
+	 * 
+	 * System.out.println("idData=" + idData); while
+	 * (tableNamesFromResultMasterTable.next()) {
+	 * modelAndView.addObject("DataQualityRulesResultsTableName",
+	 * "//csvFiles//"+idApp+"//"+strMaxDate+"//"+ maxRun+"//rules-output"); if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").toLowerCase().
+	 * endsWith("_rules")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name");
+	 * System.out.println("rules_results=" + tableName); SqlRowSet
+	 * DATA_QUALITY_RULES = iResultsDAO.getRulesTableData(tableName); if
+	 * (DATA_QUALITY_RULES != null) { modelAndView.addObject("DataQualityRules",
+	 * DATA_QUALITY_RULES); modelAndView.addObject("DataQualityRulesTrue",
+	 * "DataQualityRulesTrue"); }
+	 * modelAndView.addObject("DataQualityRulesTableName", tableName); } if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").toLowerCase().
+	 * contains("sum_dgroup")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name"); SqlRowSet
+	 * frequencyUpdateDateTableData =
+	 * iResultsDAO.getFrequencyUpdateDateTableData(tableName);
+	 * System.out.println("frequencyUpdateDateTableData=" +
+	 * frequencyUpdateDateTableData); if (frequencyUpdateDateTableData != null) {
+	 * modelAndView.addObject("frequencyUpdateDateTableData",
+	 * frequencyUpdateDateTableData);
+	 * modelAndView.addObject("frequencyUpdateDateTableDataTrue",
+	 * "frequencyUpdateDateTableDataTrue");
+	 * 
+	 * } // Group Equality String groupEqualityStatus =
+	 * iResultsDAO.getDashBoardStatusForGroupEquality(idApp, tableName);
+	 * modelAndView.addObject("groupEqualityStatus", groupEqualityStatus);
+	 * System.out.println("groupEqualityStatus=" + groupEqualityStatus);
+	 * modelAndView.addObject("sum_dgroup_tableName", tableName); } if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").contains(
+	 * "_Transactionset_sum_A1")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name");
+	 * modelAndView.addObject("Transactionset_sum_A1_TableName", tableName); //
+	 * graph List recordCountAnomalyGraphValues =
+	 * iResultsDAO.getRecordCountAnomalyGraphValues(tableName);
+	 * modelAndView.addObject("recordCountAnomalyGraphValues",
+	 * recordCountAnomalyGraphValues); } if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").toLowerCase()
+	 * .contains("_transactionset_sum_a1")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name"); Long recordCount =
+	 * iResultsDAO.getRecordCount(listApplicationsData, idApp);
+	 * System.out.println("recordCount=" + recordCount); Long averageRecordCount =
+	 * iResultsDAO.getAverageRecordCount(listApplicationsData, idApp);
+	 * System.out.println("averageRecordCount=" + averageRecordCount);
+	 * recordAnomalyTotal = iResultsDAO.getRecordAnomalyTotal(tableName, idApp);
+	 * System.out.println("recordAnomalyTotal=" + recordAnomalyTotal);
+	 * modelAndView.addObject("recordAnomalyTotal",
+	 * decimalFormat.format(recordAnomalyTotal));
+	 * modelAndView.addObject("recordCount", decimalFormat.format(recordCount));
+	 * modelAndView.addObject("averageRecordCount",
+	 * decimalFormat.format(averageRecordCount)); // passfail
+	 * List<DATA_QUALITY_Transactionset_sum_A1> fileNameandcolumnOrderStatus =
+	 * iResultsDAO .getfileNameandcolumnOrderValidationStatus(tableName); //
+	 * System.out.println("fileNameandcolumnOrderStatussize="+
+	 * fileNameandcolumnOrderStatus.size()); //
+	 * System.out.println(fileNameandcolumnOrderStatus.get(0)); //
+	 * System.out.println(fileNameandcolumnOrderStatus.get(1));
+	 * System.out.println("fileNameandcolumnOrderStatus=" +
+	 * fileNameandcolumnOrderStatus);
+	 * modelAndView.addObject("fileNameandcolumnOrderStatus",
+	 * fileNameandcolumnOrderStatus); } if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").toLowerCase()
+	 * .contains("_transaction_summary")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name"); Long allFields =
+	 * iResultsDAO.getAllFields(tableName); System.out.println("allFields=" +
+	 * allFields);
+	 * 
+	 * Long identityFields = iResultsDAO.getIdentityFields(tableName);
+	 * System.out.println("identityFields=" + identityFields);
+	 * modelAndView.addObject("allFields", decimalFormat.format(allFields));
+	 * modelAndView.addObject("identityFields",
+	 * decimalFormat.format(identityFields)); } if
+	 * (tableNamesFromResultMasterTable.getString("Table_Name").toLowerCase().
+	 * contains("_column_summary")) { String tableName =
+	 * tableNamesFromResultMasterTable.getString("Table_Name");
+	 * numberofStringColumnsFailed =
+	 * iResultsDAO.getnumberofStringColumnsFailed(tableName,listApplicationsData);
+	 * System.out.println("numberofStringColumnsFailed=" +
+	 * numberofStringColumnsFailed); numberofNumericalColumnsFailed =
+	 * iResultsDAO.getnumberofNumericalColumnsFailed(tableName,listApplicationsData)
+	 * ; System.out.println("numberofNumericalColumnsFailed=" +
+	 * numberofNumericalColumnsFailed);
+	 * modelAndView.addObject("numberofStringColumnsFailed",
+	 * decimalFormat.format(numberofStringColumnsFailed));
+	 * modelAndView.addObject("numberofNumericalColumnsFailed",
+	 * decimalFormat.format(numberofNumericalColumnsFailed)); } }
+	 * 
+	 * // passfail List<DATA_QUALITY_Transactionset_sum_A1>
+	 * fileNameandcolumnOrderStatus = iResultsDAO
+	 * .getfileNameandcolumnOrderValidationStatus("DATA_QUALITY_" + idApp +
+	 * "_Transactionset_sum_A1");
+	 * modelAndView.addObject("fileNameandcolumnOrderStatus",
+	 * fileNameandcolumnOrderStatus); modelAndView.addObject("idApp", idApp);
+	 * modelAndView.addObject("currentSection", "Dashboard");
+	 * modelAndView.addObject("currentLink", "View"); // dashboard missing dates if
+	 * (listApplicationsData.getIncrementalMatching() != null &&
+	 * listApplicationsData.getIncrementalMatching().equalsIgnoreCase("Y")) {
+	 * modelAndView.addObject("incrementalMatching",
+	 * listApplicationsData.getIncrementalMatching()); String missingDates =
+	 * iResultsDAO.getMissingDatesFromTransactionset_sum_A1(idApp);
+	 * modelAndView.addObject("missingDates", missingDates); }
+	 * modelAndView.addObject("listApplicationsData", listApplicationsData); Map
+	 * listdftranruleData = iResultsDAO.getdatafromlistdftranrule(idApp);
+	 * modelAndView.addObject("listdftranruleData", listdftranruleData); String
+	 * recordCountAnomaly = listApplicationsData.getRecordCountAnomaly(); // Record
+	 * Anomaly Status on Dashboard // Record Count Fingerprint // RCA Dashboard
+	 * String rcaStatus = iResultsDAO.getDashboardStatusForRCA(idApp,
+	 * recordCountAnomaly); modelAndView.addObject("recordCountStatus", rcaStatus);
+	 * 
+	 * // nullcountStatus Dashboard String nullcountStatus = "";
+	 * modelAndView.addObject("nullCountScore", 0.0); if
+	 * (listApplicationsData.getNonNullCheck().equalsIgnoreCase("Y")) {
+	 * nullcountStatus = iResultsDAO.getDashboardStatusForNullCount(idApp);
+	 * modelAndView.addObject("nullCountStatus", nullcountStatus); Long
+	 * nonNullColumns = iResultsDAO.getnonNullColumns(idData);
+	 * modelAndView.addObject("nonNullColumns",
+	 * decimalFormat.format(nonNullColumns)); nonNullColumnsFailed =
+	 * iResultsDAO.getnonNullColumnsFailed("DATA_QUALITY_" + idApp +
+	 * "_Column_Summary", listApplicationsData);
+	 * System.out.println("nonNullColumnsFailed=" + nonNullColumnsFailed);
+	 * modelAndView.addObject("nonNullColumnsFailed",
+	 * decimalFormat.format(nonNullColumnsFailed)); } // if
+	 * (listApplicationsData.getNumericalStatCheck().equalsIgnoreCase("Y")) { Long
+	 * numberofNumericalColumnsYes =
+	 * iResultsDAO.getNumberofNumericalColumnsYes(idData);
+	 * System.out.println("numberofNumericalColumnsYes=" +
+	 * numberofNumericalColumnsYes);
+	 * modelAndView.addObject("numberofNumericalColumnsYes",
+	 * decimalFormat.format(numberofNumericalColumnsYes)); //
+	 * numericalFieldStatsStatus Dashboard String numericalFieldStatus =
+	 * iResultsDAO.getDashboardStatusFornumericalFieldStatsStatus(idApp);
+	 * modelAndView.addObject("numericalFieldStatsStatus", numericalFieldStatus); }
+	 * // stringFieldStatsStatus Dashboard if
+	 * (listApplicationsData.getStringStatCheck().equalsIgnoreCase("Y")) { String
+	 * stringFieldStatus =
+	 * iResultsDAO.getDashboardStatusForstringFieldStatsStatus(idApp);
+	 * modelAndView.addObject("stringFieldStatsStatus", stringFieldStatus); Long
+	 * numberofStringColumnsYes = iResultsDAO.getNumberofStringColumnsYes(idData);
+	 * System.out.println("numberofStringColumnsYes=" + numberofStringColumnsYes);
+	 * modelAndView.addObject("numberofStringColumnsYes",
+	 * decimalFormat.format(numberofStringColumnsYes)); } // recordAnomalyStatus
+	 * Dashboard if
+	 * (listApplicationsData.getRecordAnomalyCheck().equalsIgnoreCase("Y")) { String
+	 * recordAnomalystatus =
+	 * iResultsDAO.getDashboardStatusForRecordAnomalyStatus(idApp);
+	 * System.out.println("recordAnomalystatus=" + recordAnomalystatus);
+	 * modelAndView.addObject("recordAnomalyStatus", recordAnomalystatus); //
+	 * numberOfRecordsFailed numberOfRecordsFailed = iResultsDAO
+	 * .getNumberOfRecordsFailed("DATA_QUALITY_" + idApp + "_Transactionset_sum_A1",
+	 * idApp); System.out.println("numberOfRecordsFailed=" + numberOfRecordsFailed);
+	 * modelAndView.addObject("numberOfRecordsFailed",
+	 * decimalFormat.format(numberOfRecordsFailed)); String recordAnomalyNewStatus =
+	 * iResultsDAO.getStatusFromRecordAnomalyTable(idApp);
+	 * modelAndView.addObject("recordAnomalyStatus", recordAnomalyNewStatus); } //
+	 * dataDriftStatus Dashboard if
+	 * (listApplicationsData.getDataDriftCheck().equalsIgnoreCase("Y")) { String
+	 * dataDriftStatus = iResultsDAO.getDashboardStatusForDataDriftStatus(idApp);
+	 * modelAndView.addObject("dataDriftStatus", dataDriftStatus);
+	 * System.out.println("dataDriftStatus=" + dataDriftStatus); } if
+	 * (listApplicationsData.getTimelinessKeyChk().equalsIgnoreCase("Y")) { String
+	 * timelinessCheckStatus =
+	 * iResultsDAO.getDashboardStatusForTimelinessCheck(idApp);
+	 * modelAndView.addObject("TimelinessCheckStatus", timelinessCheckStatus); Long
+	 * timelinessFailedRecordCount =
+	 * iResultsDAO.getFailedRecordCountForTimelinessCheck(idApp);
+	 * modelAndView.addObject("TimelinessFailedRecordCount",
+	 * decimalFormat.format(timelinessFailedRecordCount)); Long
+	 * timelinessTotalRecordCount = iResultsDAO.getRecordCount(listApplicationsData,
+	 * idApp); modelAndView.addObject("TimelinessTotalRecordCount",
+	 * decimalFormat.format(timelinessTotalRecordCount));
+	 * modelAndView.addObject("TimelinessCheckStatus", timelinessCheckStatus);
+	 * System.out.println("TimelinessCheckStatus=" + timelinessCheckStatus); }
+	 * Map<String, String> tranRuleMap =
+	 * iResultsDAO.getDataFromListDFTranRuleForMap(idApp); // allFieldsStatus
+	 * Dashboard System.out.println("testing--->"+tranRuleMap.get("all"));
+	 * modelAndView.addObject("allFieldsScore", 0.0); if
+	 * (tranRuleMap.get("all").equalsIgnoreCase("Y")) { String allFieldsStatus =
+	 * iResultsDAO.getDashboardStatusForAllFieldsStatus(idApp);
+	 * modelAndView.addObject("allFieldsStatus", allFieldsStatus);
+	 * System.out.println("allFieldsStatus=" + allFieldsStatus); } //
+	 * identityfieldsStatus Dashboard modelAndView.addObject("identityFieldsScore",
+	 * 0.0); if (tranRuleMap.get("identity").equalsIgnoreCase("Y")) { String
+	 * identityfieldsStatus =
+	 * iResultsDAO.getDashboardStatusForIdentityfieldsStatus(idApp);
+	 * modelAndView.addObject("identityfieldsStatus", identityfieldsStatus); } //
+	 * Summary of Last Run (Date) for Validation Check String dateForDashboard =
+	 * iResultsDAO.getDateForSummaryOfLastRun(idApp);
+	 * modelAndView.addObject("dateForDashboard", dateForDashboard); // Score
+	 * 
+	 * boolean calculateScore = iResultsDAO.checkRunIntheResultTableForScore(idApp,
+	 * recordCountAnomaly); System.out.println("calculateScore=" + calculateScore);
+	 * 
+	 * // calculateScore int totalCount = 0; Double totalDQI = 0.0; if
+	 * (calculateScore) { DecimalFormat df = new DecimalFormat("#.00"); //
+	 * RecordAnomaly String recordAnomalyScore =
+	 * iResultsDAO.CalculateScoreForRecordAnomaly(idData, idApp, recordCountAnomaly,
+	 * rcaStatus, listApplicationsData); if (recordAnomalyScore.contains("∞")) {
+	 * recordAnomalyScore = "0.0"; } modelAndView.addObject("recordAnomalyScore",
+	 * recordAnomalyScore); totalDQI = totalDQI +
+	 * Double.valueOf(recordAnomalyScore); totalCount++;
+	 * System.out.println("recordAnomalyScore=" + recordAnomalyScore); // Numerical
+	 * Field modelAndView.addObject("numericalFieldScore", 0.0); if
+	 * (listApplicationsData.getNumericalStatCheck().equalsIgnoreCase("Y")) { String
+	 * numericalFieldScore = iResultsDAO.CalculateScoreForNumericalField(idData,
+	 * idApp, "", listApplicationsData); if (numericalFieldScore.contains("∞")) {
+	 * numericalFieldScore = "0"; } modelAndView.addObject("numericalFieldScore",
+	 * numericalFieldScore); totalDQI = totalDQI +
+	 * Double.valueOf(numericalFieldScore); totalCount++; } // string Field
+	 * modelAndView.addObject("stringFieldScore", 0.0); if
+	 * (listApplicationsData.getStringStatCheck().equalsIgnoreCase("Y")) { String
+	 * stringFieldScore = iResultsDAO.CalculateScoreForStringField(idData, idApp,
+	 * "", listApplicationsData); if (stringFieldScore.contains("∞")) {
+	 * stringFieldScore = "0"; } modelAndView.addObject("stringFieldScore",
+	 * stringFieldScore); totalDQI = totalDQI + Double.valueOf(stringFieldScore);
+	 * totalCount++; } // NullCountScore modelAndView.addObject("nullCountScore",
+	 * 0.0); if (listApplicationsData.getNonNullCheck().equalsIgnoreCase("Y")) {
+	 * String nullCountScore = iResultsDAO.CalculateScoreForNullCount(idData, idApp,
+	 * recordCountAnomaly, nullcountStatus, listApplicationsData); if
+	 * (nullCountScore.contains("∞")) { nullCountScore = "0"; }
+	 * modelAndView.addObject("nullCountScore", nullCountScore); totalDQI = totalDQI
+	 * + Double.valueOf(nullCountScore); totalCount++; } // All FieldsScore
+	 * modelAndView.addObject("allFieldsScore", 0.0); if
+	 * (tranRuleMap.get("all").equalsIgnoreCase("Y")) { String allFieldsScore =
+	 * iResultsDAO.CalculateScoreForallFields(idData, idApp, "",
+	 * listApplicationsData); if (allFieldsScore.contains("∞")) { allFieldsScore =
+	 * "0"; } modelAndView.addObject("allFieldsScore", allFieldsScore); totalDQI =
+	 * totalDQI + Double.valueOf(allFieldsScore); totalCount++; } //
+	 * identityFieldsScore modelAndView.addObject("identityFieldsScore", 0.0); if
+	 * (tranRuleMap.get("identity").equalsIgnoreCase("Y")) { String
+	 * identityFieldsScore = iResultsDAO.CalculateScoreForidentityFields(idData,
+	 * idApp, "", listApplicationsData); if (identityFieldsScore.contains("∞")) {
+	 * identityFieldsScore = "0"; } modelAndView.addObject("identityFieldsScore",
+	 * identityFieldsScore); totalDQI = totalDQI +
+	 * Double.valueOf(identityFieldsScore); totalCount++; } // Record Fingerprint
+	 * modelAndView.addObject("recordFieldScore", 0.0); if
+	 * (listApplicationsData.getRecordAnomalyCheck().equalsIgnoreCase("Y")) { String
+	 * recordFieldScore = iResultsDAO.CalculateScoreForrecordFieldScore(idData,
+	 * idApp, "", listApplicationsData); if (recordFieldScore.contains("∞")) {
+	 * recordFieldScore = "0"; } modelAndView.addObject("recordFieldScore",
+	 * recordFieldScore); totalDQI = totalDQI + Double.valueOf(recordFieldScore);
+	 * totalCount++; } // RegexCheck modelAndView.addObject("ruleScoreDF", 0); if
+	 * (listApplicationsData.getApplyRules().equalsIgnoreCase("Y")) { Map<String,
+	 * String> rulesMap = iResultsDAO.checkRulesTable(listApplicationsData);
+	 * System.out.println("rulesMap=" + rulesMap); if (rulesMap.size() >= 2) {
+	 * modelAndView.addObject("rulesDashboard", true);
+	 * modelAndView.addObject("ruleType", rulesMap.get("ruleType"));
+	 * modelAndView.addObject("ruleScoreDF", rulesMap.get("ruleScoreDF")); totalDQI
+	 * = totalDQI + Double.valueOf(rulesMap.get("ruleScoreDF")); totalCount++; } }
+	 * modelAndView.addObject("dataDriftScore", 0); // datadrift if
+	 * (listApplicationsData.getDataDriftCheck().equalsIgnoreCase("Y")) { String
+	 * dataDriftScore = iResultsDAO.getScoreForDataDrift(listApplicationsData);
+	 * System.out.println("dataDriftScore=" + dataDriftScore);
+	 * modelAndView.addObject("dataDriftScore", dataDriftScore); totalDQI = totalDQI
+	 * + Double.valueOf(dataDriftScore); totalCount++; }
+	 * modelAndView.addObject("TimelinessCheckScore", 0); if
+	 * (listApplicationsData.getTimelinessKeyChk().equalsIgnoreCase("Y")) { String
+	 * timelinessScore = iResultsDAO.CalculateScoreForTimelinessCheck(idApp,
+	 * listApplicationsData); System.out.println("TimelinessCheckScore=" +
+	 * timelinessScore); modelAndView.addObject("TimelinessCheckScore",
+	 * timelinessScore); totalDQI = totalDQI + Double.valueOf(timelinessScore);
+	 * totalCount++; } modelAndView.addObject("showDQIEmpty", 0); } else {
+	 * System.out.println("showDQIEmpty=null"); //
+	 * modelAndView.addObject("showDQIEmpty",null);
+	 * modelAndView.addObject("recordAnomalyScore", 0.0);
+	 * modelAndView.addObject("numericalFieldScore", 0.0);
+	 * modelAndView.addObject("stringFieldScore", 0.0);
+	 * modelAndView.addObject("recordFieldScore", 0.0); // Record Fingerprint if
+	 * (listApplicationsData.getRecordAnomalyCheck().equalsIgnoreCase("Y")) { String
+	 * recordFieldScore = iResultsDAO.CalculateScoreForrecordFieldScore(idData,
+	 * idApp, "", listApplicationsData); if (recordFieldScore.contains("∞")) {
+	 * recordFieldScore = "0"; } modelAndView.addObject("recordFieldScore",
+	 * recordFieldScore); totalDQI = totalDQI + Double.valueOf(recordFieldScore);
+	 * totalCount++; System.out.println("recordFieldScore=" + recordFieldScore); }
+	 * // RegexCheck modelAndView.addObject("ruleScoreDF", 0); if
+	 * (listApplicationsData.getApplyRules().equalsIgnoreCase("Y")) { Map<String,
+	 * String> rulesMap = iResultsDAO.checkRulesTable(listApplicationsData);
+	 * System.out.println("rulesMap=" + rulesMap); if (rulesMap.size() >= 2) {
+	 * modelAndView.addObject("rulesDashboard", true);
+	 * modelAndView.addObject("ruleType", rulesMap.get("ruleType"));
+	 * modelAndView.addObject("ruleScoreDF", rulesMap.get("ruleScoreDF")); totalDQI
+	 * = totalDQI + Double.valueOf(rulesMap.get("ruleScoreDF")); totalCount++; } }
+	 * modelAndView.addObject("dataDriftScore", 0); if
+	 * (listApplicationsData.getDataDriftCheck().equalsIgnoreCase("Y")) { String
+	 * dataDriftScore = iResultsDAO.getScoreForDataDrift(listApplicationsData);
+	 * System.out.println("dataDriftScore=" + dataDriftScore);
+	 * modelAndView.addObject("dataDriftScore", dataDriftScore); totalDQI = totalDQI
+	 * + Double.valueOf(dataDriftScore); totalCount++; } // NullCountScore
+	 * modelAndView.addObject("nullCountScore", 0.0); if
+	 * (listApplicationsData.getNonNullCheck().equalsIgnoreCase("Y")) { String
+	 * nullCountScore = iResultsDAO.CalculateScoreForNullCount(idData, idApp,
+	 * recordCountAnomaly, nullcountStatus, listApplicationsData); if
+	 * (nullCountScore.contains("∞")) { nullCountScore = "0"; }
+	 * modelAndView.addObject("nullCountScore", nullCountScore); totalDQI = totalDQI
+	 * + Double.valueOf(nullCountScore); totalCount++; } // All FieldsScore
+	 * modelAndView.addObject("allFieldsScore", 0.0); if
+	 * (tranRuleMap.get("all").equalsIgnoreCase("Y")) { String allFieldsScore =
+	 * iResultsDAO.CalculateScoreForallFields(idData, idApp, "",
+	 * listApplicationsData); if (allFieldsScore.contains("∞")) { allFieldsScore =
+	 * "0"; } modelAndView.addObject("allFieldsScore", allFieldsScore); totalDQI =
+	 * totalDQI + Double.valueOf(allFieldsScore); totalCount++; } //
+	 * identityFieldsScore modelAndView.addObject("identityFieldsScore", 0.0); if
+	 * (tranRuleMap.get("identity").equalsIgnoreCase("Y")) { String
+	 * identityFieldsScore = iResultsDAO.CalculateScoreForidentityFields(idData,
+	 * idApp, "", listApplicationsData); if (identityFieldsScore.contains("∞")) {
+	 * identityFieldsScore = "0"; } modelAndView.addObject("identityFieldsScore",
+	 * identityFieldsScore); totalDQI = totalDQI +
+	 * Double.valueOf(identityFieldsScore); totalCount++; }
+	 * modelAndView.addObject("TimelinessCheckScore", 0); if
+	 * (listApplicationsData.getTimelinessKeyChk().equalsIgnoreCase("Y")) { String
+	 * timelinessScore = iResultsDAO.CalculateScoreForTimelinessCheck(idApp,
+	 * listApplicationsData); System.out.println("TimelinessCheckScore=" +
+	 * timelinessScore); modelAndView.addObject("TimelinessCheckScore",
+	 * timelinessScore); totalDQI = totalDQI + Double.valueOf(timelinessScore);
+	 * totalCount++; } } DecimalFormat df = new DecimalFormat("#0.0");
+	 * System.out.println("totalDQI=  " + totalDQI + "/" + totalCount); double
+	 * avgDQI = totalDQI / totalCount; modelAndView.addObject("totalDQI",
+	 * df.format(avgDQI)); System.out.println("avgDQI=" + avgDQI); if (totalDQI <=
+	 * 0.0) { modelAndView.addObject("totalDQI", 0); } else if (avgDQI >= 100) {
+	 * modelAndView.addObject("totalDQI", 100); } return modelAndView; } else return
+	 * new ModelAndView("loginPage"); }
+	 */
+
+	@RequestMapping(value = "/getDQIScoresMap", method = RequestMethod.POST)
+	public @ResponseBody MultiValueMap populateTableAnalysisData(ModelAndView model, HttpSession session,
+			HttpServletRequest request, HttpServletResponse response, @RequestParam String validationCheck,
+			@RequestParam Long idApp) {
+		System.out.println("validationCheck:::"+validationCheck + "" + idApp);
+		
+		// Map<String, Double> map = new LinkedHashMap<String, Double>();
+		MultiValueMap map = new MultiValueMap();
+		ListApplications listApplicationsData = validationcheckdao.getdatafromlistapplications(idApp);
+		System.out.println("listApplicationsData:::"+listApplicationsData );
+		if (validationCheck.equalsIgnoreCase("Record Count Anomaly")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Record Count Fingerprint");
+		} else if (validationCheck.equalsIgnoreCase("Null Count")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Completeness");
+		} else if (validationCheck.equalsIgnoreCase("Primary Key Duplicate")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Uniqueness -Primary Keys");
+		} else if (validationCheck.equalsIgnoreCase("User Selected Fields Duplicate")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Uniqueness -Seleted Fields");
+		} else if (validationCheck.equalsIgnoreCase("Numerical Field Fingerprint")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Numerical Field Fingerprint");
+		} else if (validationCheck.equalsIgnoreCase("String Field Fingerprint")) {
+			map = dqiGraphDAOI.getStringFieldFingerprintGraph(idApp, listApplicationsData);
+		} else if (validationCheck.equalsIgnoreCase("Record Anomaly Fingerprint")) {
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Record Anomaly");
+		} else if (validationCheck.equalsIgnoreCase("Aggregate DQI Summary")) {
+			Map<String, String> tranRuleMap = iResultsDAO.getDataFromListDFTranRuleForMap(idApp);
+			System.out.println("tranRuleMap-----> : "+tranRuleMap);
+			map = dqiGraphDAOI.getAggregateDQISummaryGraph(idApp, listApplicationsData, tranRuleMap);
+			System.out.println("map-------> : "+map.toString());
+		}else if(validationCheck.equalsIgnoreCase("Data Drift")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Data Drift");
+		}else if(validationCheck.equalsIgnoreCase("Length Check")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_LengthCheck");
+		}else if(validationCheck.equalsIgnoreCase("Bad Data")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Bad_Data");
+		}else if(validationCheck.equalsIgnoreCase("Date Rule Check")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_DateRuleCheck");
+		}else if(validationCheck.equalsIgnoreCase("Timeliness Fingerprint")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Timeliness");
+		}
+//////////////////AKSHAY--4/3/2019/////////////////////////////
+		else if(validationCheck.equalsIgnoreCase("Timeliness Fingerprint")){
+			map = dqiGraphDAOI.GetGraphForDashboard(idApp, listApplicationsData, "DQ_Timeliness");
+		}
+////////////////////////////////////////////////////////////
+		/*
+		 * long start = System.currentTimeMillis(); try { Thread.sleep(5000); }
+		 * catch (InterruptedException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); }
+		 * System.out.println("Sleep time in ms = "+(System.currentTimeMillis()-
+		 * start));
+		 */
+		return map;
+	}
+}

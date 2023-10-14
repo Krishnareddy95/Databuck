@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS `import_export_audit_logs` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`unique_id` VARCHAR(1000) NULL DEFAULT NULL,
+	`exported_application_id` INT(11) NULL DEFAULT NULL,
+	`imported_application_id` INT(11) NULL DEFAULT NULL,
+	`task_type` VARCHAR(100) NULL DEFAULT NULL,
+	`file_path` VARCHAR(1000) NULL DEFAULT NULL,
+	`start_time` DATETIME NULL DEFAULT NULL,
+	`end_time` DATETIME NULL DEFAULT NULL,
+	`status` VARCHAR(100) NULL DEFAULT NULL,
+	`status_message` TEXT NULL DEFAULT NULL,
+	`error_code` VARCHAR(500) NULL DEFAULT NULL,
+	`error_message` TEXT NULL DEFAULT NULL,
+	`created_by` INT(11) NULL DEFAULT NULL,
+	`created_by_user` VARCHAR(1000) NULL DEFAULT NULL,
+	`hash` VARCHAR(1000) NULL DEFAULT NULL,
+	PRIMARY KEY (`id`)
+);

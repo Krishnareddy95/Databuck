@@ -1,0 +1,435 @@
+package com.databuck.restcontroller;
+
+import java.nio.charset.Charset;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.databuck.bean.ListApplications;
+import com.databuck.bean.ListApplicationsandListDataSources;
+import com.databuck.bean.ListDataDefinition;
+import com.databuck.bean.ListDataSchema;
+import com.databuck.bean.ListDataSource;
+import com.databuck.controller.JSONController;
+import com.databuck.dao.IListDataSourceDAO;
+import com.databuck.dao.ITemplateViewDAO;
+import com.databuck.dao.IValidationCheckDAO;
+import com.databuck.dao.impl.ValidationCheckDAOImpl;
+import com.google.common.collect.Multimap;
+
+@RestController
+public class DatabuckRestControllerGet {
+
+	@Autowired
+	DatabuckRestDAOImpl databuckRestDAOImpl;
+	
+	@Autowired
+	IValidationCheckDAO validationcheckdao;
+
+	@Autowired
+	JSONController Jsoncontroller;
+
+	@Autowired
+	IListDataSourceDAO listdatasourcedao;
+	
+	
+	@Autowired
+	ITemplateViewDAO templateviewdao;
+	
+	@Autowired
+	ValidationCheckDAOImpl validationCheckDAOImpl;
+	@RequestMapping(value = "restapi/dataconnection", method = RequestMethod.GET)
+
+	public String viewAllDataConnections(HttpServletRequest req, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				List<ListDataSchema> listdataschema = listdatasourcedao.getListDataSchema();
+				JSONArray jsonArray = new JSONArray();
+				JSONObject mainObj = new JSONObject();
+				for (ListDataSchema lds : listdataschema) {
+					JSONObject obj = new JSONObject();
+					obj.put("idDataSchema", lds.getIdDataSchema());
+					obj.put("schemaName", lds.getSchemaName());
+					obj.put("schemaType", lds.getSchemaType());
+					obj.put("ipAddress", lds.getIpAddress());
+					obj.put("databaseSchema", lds.getDatabaseSchema());
+					obj.put("port", lds.getPort());
+					if (lds.getSchemaType().toString().trim().equalsIgnoreCase("Oracle")
+							|| lds.getSchemaType().toString().trim().equalsIgnoreCase("Oracle RAC")) {
+						obj.put("serviceName", lds.getKeytab());
+					}
+					if (lds.getSchemaType().toString().trim().equalsIgnoreCase("MSSQLActiveDirectory")) {
+						obj.put("domain", lds.getDomain());
+					}
+					if (lds.getSchemaType().toString().trim().equalsIgnoreCase("Hive Kerberos")) {
+						obj.put("principal", lds.getDomain());
+						obj.put("gss_jaas", lds.getKeytab());
+						obj.put("krb5conf", lds.getKrb5conf());
+					}
+					jsonArray.put(obj);
+				}
+				mainObj.put("All data Connections", jsonArray);
+				return mainObj.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+
+	@RequestMapping(value = "restapi/dataconnection", params = "idDataSchema", method = RequestMethod.GET)
+	public String viewIdDataConnections(HttpServletRequest req, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session, long idDataSchema) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				List<ListDataSchema> listdataschema = listdatasourcedao.getListDataSchemaId(idDataSchema);
+				JSONObject obj = new JSONObject();
+				for (ListDataSchema lds : listdataschema) {
+					if (idDataSchema == lds.getIdDataSchema()) {
+						obj.put("idDataSchema", lds.getIdDataSchema());
+						obj.put("schemaName", lds.getSchemaName());
+						obj.put("schemaType", lds.getSchemaType());
+						obj.put("ipAddress", lds.getIpAddress());
+						obj.put("databaseSchema", lds.getDatabaseSchema());
+						obj.put("port", lds.getPort());
+						if (lds.getSchemaType().toString().trim().equalsIgnoreCase("Oracle")
+								|| lds.getSchemaType().toString().trim().equalsIgnoreCase("Oracle RAC")) {
+							obj.put("serviceName", lds.getKeytab());
+						}
+						if (lds.getSchemaType().toString().trim().equalsIgnoreCase("MSSQLActiveDirectory")) {
+							obj.put("domain", lds.getDomain());
+						}
+						if (lds.getSchemaType().toString().trim().equalsIgnoreCase("Hive Kerberos")) {
+							obj.put("principal", lds.getDomain());
+							obj.put("gss_jaas", lds.getKeytab());
+							obj.put("krb5conf", lds.getKrb5conf());
+						}
+					}
+				}
+				return obj.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+
+	@RequestMapping(value = "restapi/datatemplate", method = RequestMethod.GET)
+	public String viewAllDataTemplate(HttpServletRequest req, HttpServletResponse response, HttpServletRequest request,
+			HttpSession session) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				List<ListDataSource> listdatasource = listdatasourcedao.getListDataSourceTable();
+				JSONArray jsonArray = new JSONArray();
+				JSONObject mainObj = new JSONObject();
+				for (ListDataSource lds : listdatasource) {
+					JSONObject obj = new JSONObject();
+					obj.put("idData", lds.getIdData());
+					obj.put("name", lds.getName());
+					obj.put("dataLocation", lds.getDataLocation());
+					obj.put("tableName", lds.getTableName());
+					obj.put("createdAt", lds.getCreatedAt());
+					jsonArray.put(obj);
+				}
+
+				mainObj.put("All data Template", jsonArray);
+				return mainObj.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+
+	@RequestMapping(value = "restapi/datatemplate", params = "idData", method = RequestMethod.GET)
+	public String viewIdDataTemplate(HttpServletRequest req, HttpServletResponse response, HttpServletRequest request,
+			HttpSession session, long idData) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				List<ListDataSource> listdatasource = listdatasourcedao.getListDataSourceTableId(idData);
+				List<ListDataDefinition> listdatadefinition = templateviewdao.view(idData);
+				JSONObject obj = new JSONObject();
+				for (ListDataSource lds : listdatasource) {
+					if (idData == lds.getIdData()) {
+						obj.put("idData", lds.getIdData());
+						obj.put("name", lds.getName());
+						obj.put("dataLocation", lds.getDataLocation());
+						obj.put("tableName", lds.getTableName());
+						obj.put("createdAt", lds.getCreatedAt());
+						JSONArray columnsArray =new JSONArray();
+						
+						for (ListDataDefinition ldd:listdatadefinition) {
+							System.out.println(ldd.getDisplayName());
+							JSONObject columns = new JSONObject();
+							columns.put("columnName", ldd.getDisplayName());
+							columns.put("columnType", ldd.getFormat());
+							columns.put("primaryCheck", ldd.getPrimaryKey());
+							columns.put("subsegmentCheck", ldd.getDgroup());
+							columns.put("lastReadTimeCheck", ldd.getIncrementalCol());
+							columns.put("doNotDisplayCheck", ldd.getIsMasked());
+							columns.put("partitionCheck", ldd.getPartitionBy());
+							columns.put("nullCheck", ldd.getNonNull());
+							columns.put("duplicateCheck", ldd.getDupkey());
+							columns.put("numericalCheck", ldd.getNumericalStat());
+							columns.put("textCheck", ldd.getStringStat());
+							columns.put("dataDriftCheck", ldd.getDataDrift());
+							columns.put("recordAnomalyCheck", ldd.getRecordAnomaly());
+							columns.put("nullThreshold", ldd.getNullCountThreshold());
+							columns.put("numFingerprintThreshold", ldd.getNumericalThreshold());
+							columns.put("textFingerprintThreshold", ldd.getStringStatThreshold());
+							columns.put("dataDriftThreshold", ldd.getDataDriftThreshold());
+							columns.put("recordAnomalyThreshold", ldd.getRecordAnomalyThreshold());
+							columns.put("matchValueCheck", ldd.getMeasurement());
+							columnsArray.put(columns);
+						}
+						obj.put("columns", columnsArray);
+					}
+				}
+				return obj.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+
+	@RequestMapping(value = "restapi/validationcheck", method = RequestMethod.GET)
+	public String viewAllValidationChecks(HttpServletRequest req, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				List<ListApplicationsandListDataSources> listappslistds = validationcheckdao
+						.getdatafromlistappsandlistdatasources();
+				JSONArray jsonArray = new JSONArray();
+				JSONObject mainObj = new JSONObject();
+				for (ListApplicationsandListDataSources lad : listappslistds) {
+					JSONObject obj = new JSONObject();
+					// System.out.println("idApp:"+lad.getIdApp());
+					obj.put("idApp", lad.getIdApp());
+					obj.put("validationCheckName", lad.getLaName());
+					obj.put("DataTemplateName", lad.getLsName());
+					obj.put("appType", lad.getAppType());
+					obj.put("createdAt", lad.getCreatedAt());
+					jsonArray.put(obj);
+				}
+				mainObj.put("All Application Checks", jsonArray);
+				return mainObj.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+
+	@RequestMapping(value = "restapi/validationcheck", params = "idApp", method = RequestMethod.GET)
+	public String viewIdValidationChecks(HttpServletRequest req, HttpServletResponse response,
+			HttpServletRequest request, HttpSession session, long idApp) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				 return databuckRestDAOImpl.viewValidationCheck(idApp).toString();
+				
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+	
+	@RequestMapping(value = "restapi/taskstatus", method = RequestMethod.GET)
+	public String startStatuspoll(HttpServletRequest request, HttpSession session, Long idApp,
+			HttpServletResponse response) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				return databuckRestDAOImpl.taskstatus(idApp);
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+	@RequestMapping(value = "restapi/result", method = RequestMethod.GET)
+	public String result(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam Long idApp) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				return Jsoncontroller.prepareJSONData(idApp, null, 0, true).toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+	@RequestMapping(value = "restapi/result", method = RequestMethod.DELETE)
+	public String delete(HttpServletRequest request, HttpServletResponse response,
+			@RequestBody ValidationCheckBean validationCheckBean) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				json = databuckRestDAOImpl.deleteResultFromDB(Long.valueOf(validationCheckBean.getIdApp()));
+				return json.toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+	@RequestMapping(value = "restapi/dashboard", method = RequestMethod.GET)
+	public String dashboard(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam Long idApp) {
+		JSONObject json = new JSONObject();
+		Map<String, String> secureAPIMap = Jsoncontroller.getSecureAPI();
+		String authorization = request.getHeader("Authorization");
+		if (authorization != null && authorization.startsWith("Basic")) {
+			// Authorization: Basic base64credentials
+			String base64Credentials = authorization.substring("Basic".length()).trim();
+			String credentials = new String(Base64.getDecoder().decode(base64Credentials), Charset.forName("UTF-8"));
+			// credentials = username:password
+			final String[] values = credentials.split(":", 2);
+			if (values[0].equals(secureAPIMap.get("accessTokenId"))
+					&& values[1].equals(secureAPIMap.get("secretAccessToken"))) {
+				//databuckRestDAOImpl.insertRecordIntoDataQualityHistoricDashboard(idApp);
+				return databuckRestDAOImpl.prepareJSONDataForDashboardFast(idApp).toString();
+			} else {
+				json.put("fail", "Invalid Authorization");
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				return json.toString();
+			}
+		}
+		json.put("fail", "Invalid Authorization");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		return json.toString();
+	}
+}

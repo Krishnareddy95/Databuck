@@ -1,0 +1,6 @@
+package com.databuck.econstants;
+
+public enum AlertManagement {
+    Connection_Creation_Success,Connection_Creation_Failure,Template_Creation_Success,Template_Creation_Failure,Validation_Creation_Success,
+    Validation_Creation_Failure,DQ_Validation_Success,DQ_Validation_Failure,RunSchema_Success,RunSchema_Failure,RunAppGroup_Success,RunAppGroup_Failure,DQ_Validation_Reprofiling;
+}

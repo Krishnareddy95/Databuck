@@ -1,0 +1,269 @@
+package com.databuck.controller;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.databuck.bean.ListColRules;
+import com.databuck.bean.ListDataSource;
+import com.databuck.bean.listDataAccess;
+import com.databuck.dao.IExtendTemplateRuleDAO;
+import com.databuck.dao.ITemplateViewDAO;
+import com.databuck.service.RBACController;
+
+@Controller
+public class ExtendTemplateRuleController {
+
+	@Autowired
+	IExtendTemplateRuleDAO iExtendTemplateRuleDAO;
+
+	@Autowired
+	ITemplateViewDAO templateviewdao;
+	@Autowired
+	public JdbcTemplate jdbcTemplate;
+	@Autowired
+	private RBACController rbacController;
+	public void setiExtendTemplateRuleDAO(IExtendTemplateRuleDAO iExtendTemplateRuleDAO) {
+		this.iExtendTemplateRuleDAO = iExtendTemplateRuleDAO;
+	}
+
+	@RequestMapping(value = "/addNewRule", method = RequestMethod.GET)
+	public ModelAndView addNewRule(HttpServletRequest request, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "C",session);
+		if(rbac){
+		
+		List<ListDataSource> getlistdatasourcesname = templateviewdao.getlistdatasourcesname();
+		ModelAndView modelandview = new ModelAndView("extendTemplateAddNewRule");
+		modelandview.addObject("getlistdatasourcesname", getlistdatasourcesname);
+		modelandview.addObject("currentSection", "Extend Template");
+		modelandview.addObject("currentLink", "Add New Rule");
+		return modelandview;
+		}else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/createExtendTemplateRule", method = RequestMethod.POST)
+	public void createExtendTemplateRule(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam String name, @RequestParam String description, @RequestParam String ruleCategory,
+			@RequestParam long dataSource1, @RequestParam long dataSource2, @RequestParam String ruleExpression,
+			@RequestParam String matchingExpression, @RequestParam String externalDatasetName,
+			@RequestParam String matchType, @RequestParam String regularExprColumnName) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("idUser=" + idUser);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		System.out.println("name=" + name);
+		System.out.println("description=" + description);
+		System.out.println("ruleCategory=" + ruleCategory);
+		System.out.println("dataSource1=" + dataSource1);
+		System.out.println("dataSource2=" + dataSource2);
+		System.out.println("ruleExpression=" + ruleExpression);
+		System.out.println("matchingExpression=" + matchingExpression);
+		System.out.println("externalDatasetName=" + externalDatasetName);
+		ListColRules lcr = new ListColRules();
+		lcr.setIdData(dataSource1);
+		lcr.setIdRightData(dataSource2);
+		lcr.setRuleName(name);
+		lcr.setDescription(description);
+		lcr.setExpression(ruleExpression);
+		lcr.setMatchingRules(matchingExpression);
+
+		if (ruleCategory.equalsIgnoreCase("referential")) {
+			lcr.setRuleType("referential");
+			lcr.setExternal("N");
+		} else if (ruleCategory.equalsIgnoreCase("cross referential")) {
+			lcr.setRuleType("referential");
+			lcr.setExternal("Y");
+			lcr.setExternalDatasetName(externalDatasetName);
+		} else if (ruleCategory.equalsIgnoreCase("orphan")) {
+			lcr.setRuleType("orphanreferential");
+			lcr.setExternal("Y");
+			lcr.setExpression("");
+			lcr.setExternalDatasetName(externalDatasetName);
+		} else {
+			lcr.setRuleType(ruleCategory);
+			//need to change later
+			lcr.setMatchType("Pattern");
+			lcr.setExternalDatasetName(regularExprColumnName);
+		}
+		SqlRowSet checkIfDuplicateSqlRowSet = iExtendTemplateRuleDAO
+				.checkIfDuplicateRuleNameAndDuplicateDataTemplate(lcr);
+		try{
+		if ((checkIfDuplicateSqlRowSet.getString("ruleName").equalsIgnoreCase(lcr.getRuleName()))
+				&& (checkIfDuplicateSqlRowSet.getLong("idData") == lcr.getIdData())) {
+			System.out.println("both are same");
+			try {
+				JSONObject json = new JSONObject();
+				json.put("fail", "The Rule Name and the Data Source is same");
+				response.getWriter().println(json);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			iExtendTemplateRuleDAO.insertintolistColRules(lcr);
+			try {
+				JSONObject json = new JSONObject();
+				 json.put("success", "Extended Template Rule created successfully");
+				response.getWriter().println(json);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}}}catch (Exception e) {
+				e.printStackTrace();
+				iExtendTemplateRuleDAO.insertintolistColRules(lcr);
+				try {
+					JSONObject json = new JSONObject();
+					 json.put("success", "Extended Template Rule created successfully");
+					response.getWriter().println(json);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+	
+	@RequestMapping(value = "/viewRules")
+	public ModelAndView getListDataSource(ModelAndView model, HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "R",session);
+		if(rbac){
+		
+		List<ListColRules> listColRulesData = iExtendTemplateRuleDAO.getListColRulesForViewRules();		
+		
+		model.addObject("listColRulesData", listColRulesData);
+		model.addObject("currentSection", "Extend Template");
+		model.addObject("currentLink", "View Rules");
+		model.setViewName("extendTemplateViewRules");
+		return model;
+		}else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/deleteIdListColRulesData", method = RequestMethod.POST)
+	public void deleteIdListColRulesData(HttpServletRequest request, HttpServletResponse response, HttpSession session,
+			@RequestParam long idListColrules) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		System.out.println("idListColrules=" + idListColrules);
+		templateviewdao.deleteIdListColRulesData(idListColrules);
+		try {
+			response.getWriter().println("success");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	@RequestMapping(value = "/editExtendTemplateRule", method = RequestMethod.GET)
+	public ModelAndView editExtendTemplate(HttpServletRequest request, HttpSession session,
+			@RequestParam long idListColrules, ModelAndView model) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Extend Template & Rule", "C",session);
+		if(rbac){
+			
+		List<ListDataSource> getlistdatasourcesname = templateviewdao.getlistdatasourcesname();
+		ListColRules listDataSource = iExtendTemplateRuleDAO.getDataFromListDataSourcesOfIdData(idListColrules);
+				
+		ModelAndView modelandview = new ModelAndView("editExtendTemplateRule");
+		modelandview.addObject("getlistdatasourcesname", getlistdatasourcesname);
+		modelandview.addObject("listDataSource", listDataSource);
+		modelandview.addObject("currentSection", "Extend Template");
+		modelandview.addObject("currentLink", "Edit Rule");
+		return modelandview;
+		}else
+			return new ModelAndView("loginPage");
+	}
+	
+	//Sumeet_08_08_2018
+	@RequestMapping(value = "/updateExtendTemplateRule", method = RequestMethod.POST)
+	public void updateExtendTemplateRule(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam String name,@RequestParam long idListColrules, @RequestParam String description, @RequestParam String ruleCategory,
+			@RequestParam long dataSource1, @RequestParam long dataSource2, @RequestParam String ruleExpression,
+			@RequestParam String matchingExpression, @RequestParam String externalDatasetName,
+			@RequestParam String matchType, @RequestParam String regularExprColumnName) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		long idUser = (Long) session.getAttribute("idUser");
+		System.out.println("idUser=" + idUser);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		ListColRules lcr = new ListColRules();
+		lcr.setIdData(dataSource1);
+		lcr.setIdListColrules(idListColrules);
+		lcr.setIdRightData(dataSource2);
+		lcr.setRuleName(name);
+		lcr.setDescription(description);
+		lcr.setExpression(ruleExpression);
+		lcr.setMatchingRules(matchingExpression);		
+
+		try{
+			//Sumeet_10_08_2018
+			iExtendTemplateRuleDAO.updateintolistColRules(lcr);			
+			try {
+				JSONObject json = new JSONObject();
+				 json.put("success", "Extended Template Rule updated successfully");
+				response.getWriter().println(json);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			}catch (Exception e) {
+				e.printStackTrace();
+				iExtendTemplateRuleDAO.updateintolistColRules(lcr);
+				try {
+					JSONObject json = new JSONObject();
+					 json.put("success", "Extended Template Rule updated successfully");
+					response.getWriter().println(json);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+}

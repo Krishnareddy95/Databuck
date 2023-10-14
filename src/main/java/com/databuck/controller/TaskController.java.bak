@@ -1,0 +1,557 @@
+package com.databuck.controller;
+
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.databuck.bean.DATA_QUALITY_INDEX;
+import com.databuck.bean.ListApplications;
+import com.databuck.bean.ListSchedule;
+import com.databuck.dao.IResultsDAO;
+import com.databuck.dao.ITaskDAO;
+import com.databuck.dao.IValidationCheckDAO;
+import com.databuck.service.ITaskService;
+import com.databuck.service.RBACController;
+
+@Controller
+public class TaskController {
+
+	@Autowired
+	private ITaskDAO iTaskDAO;
+	@Autowired
+	public ITaskService iTaskService;
+	@Autowired
+	private RBACController rbacController;
+	@Autowired
+	public IResultsDAO iResultsDAO;
+	@Autowired
+	IValidationCheckDAO validationcheckdao;
+
+	@RequestMapping(value = "/viewSchedules", method = RequestMethod.GET)
+	public ModelAndView viewSchedules(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "R", session);
+		if (rbac) {
+
+			List<ListSchedule> ListScheduleData = iTaskDAO.getSchedulers();
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("listScheduleData", ListScheduleData);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "viewSchedules");
+			modelAndView.setViewName("viewSchedulers");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/deleteTrigger", method = RequestMethod.GET)
+	public ModelAndView deleteTrigger(HttpSession session, HttpServletRequest request) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "D", session);
+		if (rbac) {
+			Long id = Long.parseLong(request.getParameter("id"));
+			iTaskDAO.deleteFromScheduledTasks(id);
+			System.out.println("id=" + id);
+			ModelAndView modelAndView = new ModelAndView("Data Template Created Successfully");
+			modelAndView.addObject("message", "Trigger Deleted Successfully");
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "viewTriggers");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/deleteSchedule", method = RequestMethod.GET)
+	public ModelAndView deleteSchedule(HttpSession session, HttpServletRequest request) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "D", session);
+		if (rbac) {
+			Long idSchedule = Long.parseLong(request.getParameter("idSchedule"));
+			iTaskDAO.deleteFromListSchedule(idSchedule);
+			System.out.println("idSchedule=" + idSchedule);
+			ModelAndView modelAndView = new ModelAndView("Data Template Created Successfully");
+			modelAndView.addObject("message", "Scheduler Deleted Successfully");
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "viewSchedules");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/viewTriggers", method = RequestMethod.GET)
+	public ModelAndView viewTriggers(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "R", session);
+		if (rbac) {
+
+			SqlRowSet triggers = iTaskDAO.getTriggers();
+			// System.out.println(triggerData.size());
+			/*
+			 * for (Entry<String,String> m : triggerData.entrySet()) {
+			 * System.out.println("Key="+m.getKey()+"Value="+m.getValue()); }
+			 */
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("triggerData", triggers);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "viewTriggers");
+			modelAndView.setViewName("viewTriggers");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/triggerTask", method = RequestMethod.GET)
+	public ModelAndView triggerTask(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "C", session);
+		if (rbac) {
+
+			List<ListApplications> listApplicationsdata = iTaskDAO.listApplicationsView();
+			Map<Long, String> listScheduleData = iTaskDAO.getListScheduleData();
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("listScheduleData", listScheduleData);
+			modelAndView.addObject("listApplicationsdata", listApplicationsdata);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "Trigger Task");
+			modelAndView.setViewName("triggerTask");
+
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/scheduledTask", method = RequestMethod.GET)
+	public ModelAndView scheduledTask(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "C", session);
+		if (rbac) {
+
+			List<ListApplications> listApplicationsdata = iTaskDAO.listApplicationsView();
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("listApplicationsdata", listApplicationsdata);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "Scheduled Task");
+			modelAndView.setViewName("scheduledTask");
+
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/triggerTaskSchedule", method = RequestMethod.POST)
+	public void triggerTask(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam Long idApp, @RequestParam Long idScheduler) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("idScheduler=" + idScheduler);
+		System.out.println("idApp=" + idApp);
+
+		int insertintoscheduledtasks = iTaskDAO.insertintoscheduledtasks(idApp, idScheduler);
+		System.out.println("insertintoscheduledtasks=" + insertintoscheduledtasks);
+
+		if (insertintoscheduledtasks > 0) {
+			try {
+				response.getWriter().println("Runtask Scheduled successfully");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				response.getWriter().println("There is a problem");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@RequestMapping(value = "/scheduleTask", method = RequestMethod.POST)
+	public void scheduleTask(HttpServletResponse response, HttpServletRequest request, HttpSession session,
+			@RequestParam String name, @RequestParam String description, @RequestParam String frequency,
+			@RequestParam String scheduledDay, @RequestParam String day, @RequestParam String ScheduleTimer) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("scheduledDay=" + scheduledDay);
+		int insertIntolistSchedule = iTaskDAO.insertIntolistSchedule(name, description, frequency, scheduledDay, day,
+				ScheduleTimer);
+		System.out.println("insertIntolistSchedule=" + insertIntolistSchedule);
+
+		if (insertIntolistSchedule > 0) {
+			try {
+				response.getWriter().println("Runtask Scheduled successfully");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				response.getWriter().println("There is a problem");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		/*
+		 * ModelAndView modelAndView = new ModelAndView();
+		 * modelAndView.addObject("currentSection","Tasks");
+		 * modelAndView.addObject("currentLink","Scheduled Task");
+		 * modelAndView.setViewName("scheduledTask");
+		 * 
+		 * return modelAndView;
+		 */
+	}
+
+	@RequestMapping(value = "/runTaskResult", method = RequestMethod.POST, produces = "application/json")
+	public void runtaskresult(HttpServletRequest request, HttpSession session, HttpServletResponse response,
+			@RequestParam Long idApp, @RequestParam String task_name) {
+		/*
+		 * Task task=new Task(); task.setSuccess("Task completed successfully!"
+		 * );
+		 */try {
+			System.out.println("run task controller1");
+			Object user = session.getAttribute("user");
+			System.out.println("user:" + user);
+			if ((user == null) || (!user.equals("validUser"))) {
+				try {
+					response.sendRedirect("loginPage.jsp");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			boolean updateStatus = iTaskDAO.updateRunScheduledTask(idApp);
+			boolean insertOldSixTablesStatus = iTaskService.insertOldSixTables(idApp);
+			// boolean insertOldSixTablesStatus=true;
+			System.out.println("insertOldSixTablesStatus:" + insertOldSixTablesStatus);
+			System.out.println(" idApp :" + idApp);
+			System.out.println("task_name:" + task_name);
+
+			session.setAttribute("scheduledTask", "yes");
+			iTaskService.runJar(idApp);
+			Thread.sleep(1000);
+			session.removeAttribute("scheduledTask");
+
+			JSONObject json = new JSONObject();
+			json.put("success", "success");
+			json.put("appName", task_name);
+			response.getWriter().println(json);
+			System.out.println(json);
+			response.getWriter().flush();
+
+			// response.getWriter().println("{\"success\":\"some message\"}");
+			// response.getWriter().flush();
+			/*
+			 * if(insertOldSixTablesStatus) { System.out.println(
+			 * "succesufully inserted  to old tables"); task.setSuccess(
+			 * "Task completed successfully!");
+			 * 
+			 * return task; } else { task.setSuccess(
+			 * "Task completed successfully!"); //task.setFail(
+			 * "Task could not be completed!"); System.err.println(
+			 * "problem while inserting in old six tables"); return task; }
+			 */
+		} catch (Exception e) {
+			e.printStackTrace();
+			// task.setFail("Task could not be completed!");
+			// return task;
+
+		}
+
+		/*
+		 * 
+		 * System.out.println(request.getParameter("idApp")); long idApp =
+		 * Long.parseLong(request.getParameter("idApp"));
+		 * 
+		 * // boolean updateStatus = iTaskDAO.updateRunScheduledTask(idApp);
+		 * //List<ListApplications> listApplicationsdata =
+		 * iTaskDAO.listApplicationsView(); //ModelAndView modelAndView = new
+		 * ModelAndView("listApplicationsView");
+		 * //model.addObject("listApplicationsdata", listApplicationsdata);
+		 * request.setAttribute("currentSection", "Tasks");
+		 * request.setAttribute("Tasks", "Run Task");
+		 * request.setAttribute("jarstatus", "TaskInProgess");
+		 * modelAndView.addObject("currentSection","Tasks");
+		 * modelAndView.addObject("currentLink","Run Task");
+		 * modelAndView.addObject("jarstatus", "TaskInProgess"); TaskStatus
+		 * ts=new TaskStatus(); ts.setSucces("Task completed");
+		 */ // return "success";
+	}
+
+	/*
+	 * @RequestMapping(value = "/runTaskResult", method = RequestMethod.POST)
+	 * public String statuspoll(HttpSession session,HttpServletResponse
+	 * response) { Object user = session.getAttribute("user");
+	 * System.out.println("user:"+user);
+	 * if((user==null)||(!user.equals("validUser"))) { try {
+	 * response.sendRedirect("loginPage"); } catch (IOException e) {
+	 * e.printStackTrace(); } }
+	 * 
+	 * String status= iTaskService.getTaskStatusFromRunScheduledTasks(); return
+	 * status; }
+	 */
+
+	@RequestMapping(value = "/listApplicationsView", method = RequestMethod.POST)
+	public ModelAndView listApplicationsView(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "C", session);
+		if (rbac) {
+
+			List<ListApplications> listApplicationsdata = iTaskDAO.listApplicationsView();
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("listApplicationsdata", listApplicationsdata);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "Run Task");
+			modelAndView.setViewName("listApplicationsView");
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/listApplicationsView", method = RequestMethod.GET)
+	public ModelAndView listApplicationsViewGet(HttpSession session) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			return new ModelAndView("loginPage");
+		}
+		boolean rbac = rbacController.rbac("Tasks", "R", session);
+		if (rbac) {
+			List<ListApplications> listApplicationsdata = iTaskDAO.listApplicationsView();
+			ModelAndView modelAndView = new ModelAndView();
+			modelAndView.addObject("listApplicationsdata", listApplicationsdata);
+			modelAndView.addObject("currentSection", "Tasks");
+			modelAndView.addObject("currentLink", "Run Task");
+			modelAndView.setViewName("listApplicationsView");
+
+			return modelAndView;
+		} else
+			return new ModelAndView("loginPage");
+	}
+
+	@RequestMapping(value = "/statusPoll", method = RequestMethod.POST, produces = "application/json")
+	public void startStatuspoll(HttpServletRequest request, HttpSession session, Long idApp,
+			HttpServletResponse response) {
+		Object user = session.getAttribute("user");
+		System.out.println("user:" + user);
+		if ((user == null) || (!user.equals("validUser"))) {
+			try {
+				response.sendRedirect("loginPage.jsp");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		request.setAttribute("currentSection", "Tasks");
+		request.setAttribute("currentLink", "Run Task");
+		System.out.println("status pol controller");
+		System.out.println(idApp);
+		String status = "Task " + iTaskService.getTaskStatusFromRunScheduledTasks(idApp);
+		SqlRowSet appTypeFromListApplications = iTaskService.getAppTypeFromListApplications(idApp);
+		String appType = "", appName = "";
+		while (appTypeFromListApplications.next()) {
+			appType = appTypeFromListApplications.getString(1);
+			appName = appTypeFromListApplications.getString(2);
+		}
+		// for showing task % status
+		int percentage = 5;
+		System.out.println("appType="+appType);
+		if (appType.equalsIgnoreCase("Data Forensics")) {
+			percentage = iTaskService.getStatusOfDfReadFromTaskProgressStatus(idApp);
+			if (percentage >= 30) {
+				double count = iTaskService.getColumnCountYesInListApplicationsAndListDFTranrule(idApp);
+				double passedStatus = iTaskService.getTaskStatusForPassed(idApp);
+				percentage = percentage + (int) ((passedStatus / count) * 70);
+				if (percentage > 100) {
+					percentage = 100;
+				}
+			}
+		} else if (appType.equalsIgnoreCase("Data Matching") || appType.equalsIgnoreCase("Data Matching")
+				|| appType.equalsIgnoreCase("Data Matching Group") || appType.equalsIgnoreCase("Statistical Matching")
+				) {
+			percentage = iTaskService.getStatusForMatching(idApp);
+			//System.out.println("Matching");
+		}else if(appType.equalsIgnoreCase("Schema Matching")){
+			percentage = iTaskService.getStatusForSchemaMatching(idApp);
+			if (percentage > 100) {
+				percentage = 100;
+			}
+		}
+		// System.out.println("percentage="+percentage);
+
+		try {
+			if (status.equalsIgnoreCase("Task completed1")) {
+				ListApplications listApplicationsData = validationcheckdao.getdatafromlistapplications(idApp);
+				Long idData = listApplicationsData.getIdData();
+				String recordCountAnomaly = listApplicationsData.getRecordCountAnomaly();
+				DATA_QUALITY_INDEX DQI = new DATA_QUALITY_INDEX();
+				// Record Anomaly Status on Dashboard
+				// String recordAnomalyNewStatus =
+				// iResultsDAO.getStatusFromRecordAnomalyTable(idApp);
+				// DQI.setRecord_anomaly_status(recordAnomalyNewStatus);
+				// RCA Dashboard
+				String rcaStatus = iResultsDAO.getDashboardStatusForRCA(idApp, recordCountAnomaly);
+				DQI.setRecord_count_status(rcaStatus);
+				// nullcountStatus Dashboard
+				String nullcountStatus = iResultsDAO.getDashboardStatusForNullCount(idApp);
+				DQI.setNull_count_status(nullcountStatus);
+				// numericalFieldStatsStatus Dashboard
+				String numericalFieldStatus = iResultsDAO.getDashboardStatusFornumericalFieldStatsStatus(idApp);
+				DQI.setNumerical_field_status(numericalFieldStatus);
+				// stringFieldStatsStatus Dashboard
+				String stringFieldStatus = iResultsDAO.getDashboardStatusForstringFieldStatsStatus(idApp);
+				DQI.setString_field_status(stringFieldStatus);
+				// recordAnomalyStatus Dashboard
+				String recordAnomalystatus = iResultsDAO.getDashboardStatusForRecordAnomalyStatus(idApp);
+				DQI.setRecord_anomaly_status(recordAnomalystatus);
+				// dataDriftStatus Dashboard
+				// String dataDriftStatus =
+				// iResultsDAO.getDashboardStatusForDataDriftStatus(idApp);
+				// modelAndView.addObject("dataDriftStatus", dataDriftStatus);
+				// System.out.println("dataDriftStatus="+dataDriftStatus);
+				// allFieldsStatus Dashboard
+				String allFieldsStatus = iResultsDAO.getDashboardStatusForAllFieldsStatus(idApp);
+				DQI.setAll_fields_status(allFieldsStatus);
+				// identityfieldsStatus Dashboard
+				String identityfieldsStatus = iResultsDAO.getDashboardStatusForIdentityfieldsStatus(idApp);
+				DQI.setUser_selected_fields_status(identityfieldsStatus);
+				// Score
+				boolean calculateScore = iResultsDAO.checkRunIntheResultTableForScore(idApp, recordCountAnomaly);
+				System.out.println("calculateScore=" + calculateScore);
+				// calculateScore
+				if (calculateScore) {
+					DecimalFormat df = new DecimalFormat("#.00");
+					// RecordAnomaly
+					String recordAnomalyScore = iResultsDAO.CalculateScoreForRecordAnomaly(idData, idApp,
+							recordCountAnomaly, rcaStatus, listApplicationsData);
+					if (recordAnomalyScore.contains("∞")) {
+						recordAnomalyScore = "0";
+					}
+					DQI.setRecord_count_score(recordAnomalyScore);
+					// NullCountScore
+					String nullCountScore = iResultsDAO.CalculateScoreForNullCount(idData, idApp, recordCountAnomaly,
+							nullcountStatus, listApplicationsData);
+					if (nullCountScore.contains("∞")) {
+						nullCountScore = "0";
+					}
+					DQI.setNull_count_score(nullCountScore);
+					// All FieldsScore
+					String allFieldsScore = iResultsDAO.CalculateScoreForallFields(idData, idApp, allFieldsStatus,
+							listApplicationsData);
+					if (allFieldsScore.contains("∞")) {
+						allFieldsScore = "0";
+					}
+					DQI.setAll_fields_score(allFieldsScore);
+					// identityFieldsScore
+					SqlRowSet dashboardDetails = iResultsDAO.CalculateDetailsForDashboard(idApp, "DQ_Uniqueness -Seleted Fields",
+							listApplicationsData);
+					String identityFieldsScore = "";
+					while (dashboardDetails.next()) {
+						identityFieldsScore = dashboardDetails.getString(4);
+					}
+					if (identityFieldsScore.contains("∞")) {
+						identityFieldsScore = "0";
+					}
+					DQI.setUser_selected_fields_score(identityFieldsScore);
+					// Numerical Field
+					String numericalFieldScore = iResultsDAO.CalculateScoreForNumericalField(idData, idApp,
+							numericalFieldStatus, listApplicationsData);
+					if (numericalFieldScore.contains("∞")) {
+						numericalFieldScore = "0";
+					}
+					DQI.setNumerical_field_score(numericalFieldScore);
+					// string Field
+					String stringFieldScore = iResultsDAO.CalculateScoreForStringField(idData, idApp, stringFieldStatus,
+							listApplicationsData);
+					if (stringFieldScore.contains("∞")) {
+						stringFieldScore = "0";
+					}
+					DQI.setString_field_score(stringFieldScore);
+					// Record Fingerprint
+					String recordFieldScore = iResultsDAO.CalculateScoreForrecordFieldScore(idData, idApp,
+							recordAnomalystatus, listApplicationsData);
+					if (recordFieldScore.contains("∞")) {
+						recordFieldScore = "0";
+					}
+					DQI.setRecord_anomaly_score(recordFieldScore);
+					DQI.setValidation_check_id(idApp);
+					DQI.setValidation_check_name(listApplicationsData.getName());
+					iTaskService.insertDataIntoDATA_QUALITY_INDEX(DQI, recordCountAnomaly);
+
+				} else {
+
+				}
+			}
+
+			JSONObject json = new JSONObject();
+			json.put("percentage", percentage);
+			json.put("success", status);
+			// json.put("appName", appName);
+			response.getWriter().println(json);
+			System.out.println(json);
+			response.getWriter().flush();
+			// response.getWriter().println("{\"percentage\": \""+ percentage +
+			// "\",\"success\": \""+ status + "\"}");
+			// response.getWriter().println("{}");
+			// response.getWriter().flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

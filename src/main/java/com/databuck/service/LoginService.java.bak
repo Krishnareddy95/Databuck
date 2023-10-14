@@ -1,0 +1,21 @@
+package com.databuck.service;
+
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+
+import com.databuck.bean.UserLogin;
+
+public interface LoginService {
+
+	Long userAuthentication(String email, String password);
+
+	Long getRolesFromUserRoleTable(Long idUser);
+
+	SqlRowSet getIdTaskandAccessControlFromRoleModuleTable(Long idRole);
+
+	String getTaskNameFromModuleTable(long idTask);
+
+	String getFirstNameFromUserTable(Long idUser);
+
+	
+
+}
